@@ -1,0 +1,59 @@
+# LAB (CRM-905, step 3): one measurement of the whole Vitest suite on the runner, as configured,
+# with no tuning, to decide between keeping the list (A) or running everything (B).
+name: Lab full suite
+on:
+  push:
+    branches: ["lab/905-full-suite"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  full:
+    runs-on: ubuntu-latest
+    timeout-minutes: 80
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Runner
+        run: |
+          echo "nproc=$(nproc)"; free -m; node -v; npx vitest --version; cat /etc/os-release | grep PRETTY
+      - name: Full suite
+        run: |
+          ( while :; do free -m | awk '/Mem:/{print $3}' >> mem.log; sleep 5; done ) &
+          SAMPLER=$!
+          start=$(date +%s)
+          set +e
+          timeout 70m /usr/bin/time -v -o time.txt npx vitest run --reporter=default --reporter=json --outputFile.json=vitest.json > vitest.out 2>&1
+          rc=$?
+          set -e
+          end=$(date +%s)
+          kill $SAMPLER || true
+          echo "vitest_exit=$rc seconds=$((end-start)) mem_used_peak_mb=$(sort -n mem.log | tail -1) mem_used_start_mb=$(head -1 mem.log) mem_total_mb=$(free -m | awk '/Mem:/{print $2}')" | tee summary.txt
+          grep -E 'Maximum resident|Elapsed' time.txt | tee -a summary.txt || true
+          echo "--- OOM / worker errors:" | tee -a summary.txt
+          grep -ciE 'heap out of memory|ERR_WORKER|Worker exited|JavaScript heap' vitest.out | tee -a summary.txt || true
+          tail -60 vitest.out
+      - name: Lint the whole repo with the baseline
+        if: always()
+        run: |
+          set +e
+          start=$(date +%s)
+          npm run lint > lint.out 2>&1
+          rc=$?
+          echo "lint_exit=$rc lint_seconds=$(( $(date +%s) - start ))" | tee -a summary.txt
+          tail -40 lint.out
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: full-suite
+          path: |
+            vitest.json
+            vitest.out
+            mem.log
+            time.txt
+            summary.txt
+            lint.out
