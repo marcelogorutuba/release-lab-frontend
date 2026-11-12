@@ -1,0 +1,307 @@
+# Vitest specs that run in CI on every pull request and push (read by ci/check-vitest-list.mjs
+# and by the "Vitest (CI list)" job). Every spec under src/ is either here or in
+# ci/vitest-exclusions.txt; a spec in neither fails the pre-push hook and the "Spec list" check.
+#
+# Why a list and not the whole suite: measured on 2026-11-12 on ubuntu-latest (4 vCPU, 16 GB),
+# the whole suite (323 files) takes 22.4 min, peaks at 6.4 GB and lost a worker to a heap
+# out-of-memory error; this list runs in about 40 s. The time is spent collecting and
+# setting up jsdom per file, not in the tests.
+#
+# Scoped, opt-in list: a spec earns a line here when it guards a behaviour
+# we do not want silently reverted, is fully mocked, and runs fast.
+#   - PermissionsContext / RoleDetail (EVO-2062): can() stays data-driven,
+#     system roles stay read-only, and duplicating one keeps its permissions.
+#   - RolesList: the row icon keeps matching what the detail screen allows.
+#   - campaignsService (EVO-1838): the campaign endpoints keep their
+#     bare-body fallback when the backend skips the response envelope.
+#   - campaign action gates: each campaign action, single or bulk,
+#     shows only with the key the CRM proxy checks for it; with every key the
+#     screen is unchanged.
+#   - segmentsService: every segment call goes to the CRM API, with the
+#     path and params the CRM proxy routes, and auth failures are not masked.
+#   - Users (EVO-1947): a list reload keeps carrying the search term and
+#     the chosen sort — dropping either serves a differently ordered page.
+#   - apiHelpers / useChannelSubmission / useChannelValidation (CRM-114):
+#     a refused channel create keeps showing the message the backend wrote
+#     (the plan-quota 422 envelope) instead of the axios status text, and
+#     no validation guard returns false without saying why.
+#   - Journey FE tech-debt (CRM-68): the six action panels stay free of
+#     the auto-persist-on-load effect, AssignBotPanel keeps a typed
+#     onUpdate contract, EnvironmentManager surfaces validation via
+#     toast (not window.alert), BaseFlowCanvas dedupes its node-change
+#     apply call, SessionsViewer debounces search and keeps stats
+#     isolated from filters, and the locale-driven date/i18n specs
+#     guard against hardcoded pt-BR creeping back in.
+#   - Journey subcomponent labels: every <Label> that names a single
+#     control resolves through getByLabelText, and the ones that cover
+#     a set (webhook headers) expose a named group.
+#   - journey label trigger: the selected label's creation date reads the API's
+#     epoch seconds and follows the interface language, instead of January 1970.
+#   - MessageList (CRM-165): a message arriving with the view at the
+#     bottom keeps auto-scrolling (even while an own send is still in
+#     flight), reading history is never hijacked — bot replies included —
+#     and the new-message indicator only fires for real messages.
+#   - ContactNotesCard (CRM-177): the notes list keeps reading the standard
+#     `{ success, data, meta }` envelope. Reading it wrong is invisible —
+#     the card shows its empty state with the notes in the database, which
+#     the person on screen reports as "the note did not save".
+#   - eventLabels (CRM-155): a conversation event prefers labels_data over
+#     the title-only labels field, and an empty labels_data still yields an
+#     empty list. Losing either brings back the label that only shows up
+#     after F5, since the ChatContext guard rejects a colourless label.
+#   - rbac-render-gates (CRM-150): every write control stays hidden when
+#     can() denies and renders when it grants. The paired positive case is
+#     what keeps the negative ones honest — a control that stopped
+#     rendering for everyone would satisfy the denial assertions too.
+#   - dashboardUtils / formatDateTime: amounts stay in reais while the
+#     separators and the day/month order follow the interface language.
+#   - permissions service (CRM-164): a fetch with no cache to serve must
+#     reject, not resolve to []. The context spec mocks the service away,
+#     so these are the only examples guarding it.
+#   - RouterGuard (CRM-164): the load-failure panel, and the path split
+#     that keeps public pages reachable for a logged-in visitor.
+#   - CustomAttributesForm (CRM-166): a failed definitions fetch is reported
+#     as a failure with a retry, not as "no attributes". Asserted against the
+#     genuine empty state, which is what keeps the failure cases honest.
+#   - menuItems (CRM-166): the Settings entries gated on an administrative
+#     key stay gated on it — Atributos Personalizados above all, whose read
+#     the agent now holds. Also covers the EVO-1938/CRM-70 gates already there.
+#   - MacroActionRow (CRM-162): the assign_agent warning renders whenever
+#     there is an agent list to pick from — a reopened modal refetching over
+#     the previous one included — and never on the other select actions.
+#     Also guards the aria wiring from the select to the warning.
+#   - macro send_attachment: the action stores the uploaded blob id, and the form
+#     cannot save or reshuffle rows while a file is still uploading.
+#   - Setup wizard (CRM-262): a degraded provisioning answer warns instead of
+#     congratulating, and an ok one still congratulates without warning. The
+#     paired direction is what keeps it honest — a warning ADDED next to the
+#     success toast would look right on screen and still tell the operator
+#     the install is fine.
+#   - i18n-parity (CRM-162, CRM-671): pt-BR and es carry every en key, and es every pt-BR key, catalog-wide.
+#   - _lib/parity (CRM-484): the guard's own rules. A clean catalog keeps
+#     i18n-parity green even with the rule broken; only this spec notices.
+#   - macros-parity (CRM-162): fr, it and pt are covered nowhere else, so
+#     macros.json is checked against en across all six. A key added to one
+#     locale only is invisible until someone on another reads the raw key.
+#   - contactsService.createContact / labelsService (CRM-321, CRM-381): the
+#     writes keep resolving to the unwrapped payload; re-declaring the envelope
+#     makes the caller unwrap twice and blank the page.
+#   - AiCredentials / IntegrationCredentials (CRM-413): the scope privilege
+#     stays ON TOP of the resource grant per verb, and a CREATE keeps
+#     carrying its scope. Both are gates the server also enforces, so a
+#     revert here only shows up as a 403 in the user's face.
+#   - contact.updated reconciliation (CRM-447): with masking on, the
+#     account-wide broadcast is masked for every audience while REST
+#     unmasks per request, so the frame is reconciled against REST before
+#     it reaches the store. Guards the gates that keep that affordable,
+#     plus the socket-to-reducer hop no unit spec reaches.
+#   - ConversationsContext reducer (CRM-445): the contact patch keeps
+#     reading an empty field as "keep the current value" and keeps matching
+#     REST-loaded conversations, which carry `contact` and no `meta.sender`.
+#   - ModelSelector (CRM-482): the pinned model catalogue keeps its shape,
+#     drops an id on the end-of-service date the provider published, and
+#     keeps rendering a value the list no longer offers. None of the three
+#     was gated before — the shape guard shipped with CRM-442 and never ran
+#     here. The bedrock lifecycle spec stays out: it reaches the network.
+#   - events manifest catalog (CRM-316): mirror of the evo-flow catalog the
+#     journey trigger and segment editor read; a drift only shows in the UI.
+#   - custom-tool body params (CRM-527): body_params stay the
+#     {type, required, description} schema the tool-execution engine reads,
+#     a legacy string is repaired on edit, and a nameless row is flagged
+#     instead of dropped in silence. The three specs shipped green but
+#     outside this list, so nothing here ran them.
+#   - theme tokens on journey/segment screens (CRM-520): a fixed
+#     gray/white/black class only looks right in one theme; the guard
+#     fails on any new one, with no baseline.
+#   - trigger filter contract (CRM-519): every key the event trigger offers
+#     as a filter has a label and help in all locales, a select for ids and
+#     closed sets, and no timestamp/object, and every lookup asks for a full
+#     page instead of the endpoint default. A new catalog key that misses one
+#     of these only shows up as a raw key in the user's face. journey-parity
+#     is the ONLY guard for the six-locale event-switch keys (i18n-parity
+#     covers journey.json for es only), and EventBasicConfig owns the switch notice/Undo.
+#   - Step4 distribution window (CRM-479): every hour row states the number it
+#     persists, and 9 stays selectable. The "10 Horas" row shipped bound to 9, and
+#     dropping 9 now would blank the trigger on campaigns that hold it — Radix shows
+#     the placeholder only for an empty value, so the window reads as "no interval".
+#   - access-token creation (CRM-561): the POST carries the host's active account,
+#     which is the ONLY thing that tells the auth which account to bind the token
+#     to. Dropping the header is invisible here and shows up as a 401 on every CRM
+#     call the customer's automations make.
+#   - access-token usage examples: the modal's copy-paste examples use the one
+#     header the CRM accepts for these tokens and resolve the installation's URL.
+#   - website widget embed + cable: both embeds point at the agency's origin, the
+#     cable URL resolves from a path-only API base, and the subscription carries website_token.
+#   - account people directory (CRM-539): every agent selector reads
+#     usersService.getAccountUsers, which asks the auth for full pages and walks
+#     them all (the default page is 20, and a truncated list looks complete);
+#     the channel "Atendentes" total is the size of that list and the current
+#     inbox members are the ones marked. The account scope itself is the host's
+#     request context — a caller-side filter here would only mask its absence.
+#   - credential holder parsing (CRM-585): one holder the screen cannot label
+#     discards the whole list, so the dialog falls back to the server's pt-BR
+#     strings instead of naming part of who holds the credential. A permissive
+#     parse renders a raw i18n key, or an empty list asserting somebody holds it.
+#   - datetime-local fields and the contact events period: the stored instant shows
+#     in local time and the typed time is saved unshifted. The specs force
+#     America/Sao_Paulo; on a UTC runner the shift is zero and a revert passes.
+#   - browser language detection: a regional Portuguese tag (pt-PT, pt-AO) resolves
+#     to pt-BR instead of falling through to English.
+#   - settings save refusals (labels, canned responses, custom attributes): a
+#     422 the screen can explain lands on its field with the modal open; one it
+#     cannot still raises the generic toast, so a refusal is never silent.
+#     Renaming an existing attribute keeps its key: the stored values are filed
+#     under it.
+#   - labels list creation date: the API sends epoch seconds, so the column shows
+#     the real day in each language instead of January 1970.
+#   - pipeline board load failures: a deep link to a pipeline the user cannot open
+#     (403) or that does not exist (404) shows an explicit state, not an empty board.
+#   - list pagination (custom tools, MCP servers, scheduled actions, automation rules):
+#     the total comes from meta.pagination and each page asks for its own slice; a
+#     total read off the loaded rows, or a catalog loaded at the backend's default
+#     size, leaves every row past the first page unreachable.
+#   - agent Channels tab: a channel another agent serves is never linked without
+#     confirmation (checked again on click; a 409 refreshes instead), unlinking
+#     deactivates, a deleted allowed label stays visible because it still blocks
+#     the agent, and the link modal tells "no channel", "all linked" and "failed
+#     to load" apart. The channel's own agent tab is read-only.
+#   - agent test panel: it stays an in-page side panel, never a dialog, its width
+#     stays between 360px and the smaller of half the window and what leaves the edit
+#     page 600px, and the session actions keep calling the server, not local state.
+#   - agent Profile tab: the form/summary grid splits by its own width (container
+#     query), not the window's, so an open test panel drops it to one column.
+#   - conversation assignment: the team call sends only team_id and the agent call
+#     only assignee_id; a null assignee_id next to team_id unassigns the agent.
+#   - conversation realtime: the agent and team ids are read from meta, where
+#     push_event_data carries them; copying the absent top-level ids blanked them.
+#     After an assignment the conversation is read back, and what the endpoint
+#     omits (an agent dropped by a team change) is cleared, not kept.
+# The whole list runs in ~40s and is deterministic.
+
+src/components/pipelines/StageAutomationRules.spec.tsx
+src/pages/Customer/Automation/registries/conditionAttributeRegistry.spec.ts
+src/pages/Customer/Automation/registries/conversationBoundActions.spec.ts
+src/pages/Customer/Automation/AutomationForm.spec.tsx
+src/components/automation/ConditionRow.spec.tsx
+src/hooks/automation/useAutomationFormData.spec.ts
+src/contexts/PermissionsContext.spec.tsx
+src/services/permissions.spec.ts
+src/guards/RouterGuard.spec.tsx
+src/pages/Admin/Roles/RoleDetail.spec.tsx
+src/pages/Admin/Roles/RolesList.spec.tsx
+src/services/campaigns/campaignsService.spec.ts
+src/components/campaigns/campaign-action-gates.spec.tsx
+src/services/segments/segmentsService.spec.ts
+src/pages/Customer/Settings/Users/Users.spec.tsx
+src/components/users/UserFormModal.spec.tsx
+src/utils/apiHelpers.spec.ts
+src/utils/templateVariables.spec.ts
+src/pages/Customer/Dashboard/components/dashboardUtils.spec.ts
+src/utils/time/formatDateTime.spec.ts
+src/components/channels/settings/TemplateFormModal.spec.tsx
+src/hooks/channels/useChannelSubmission.spec.ts
+src/hooks/channels/useChannelValidation.spec.ts
+src/hooks/channels/useLiveChannelStatus.spec.ts
+src/utils/channelStatus.spec.ts
+src/components/channels/ChannelTypeHub.spec.tsx
+src/components/inbox/HubConnectButton.spec.tsx
+src/components/journey/environment-manager/EnvironmentManager.spec.tsx
+src/components/journey/nodes/actions/add-label/AddLabelNode.spec.tsx
+src/components/journey/nodes/actions/assign-bot/AssignBotPanel.spec.tsx
+src/components/journey/nodes/actions/change-priority/ChangePriorityPanel.spec.tsx
+src/components/journey/nodes/actions/defer-conversation/DeferConversationNode.spec.tsx
+src/components/journey/nodes/actions/defer-conversation/DeferConversationPanel.spec.tsx
+src/components/journey/nodes/actions/mute-conversation/MuteConversationPanel.spec.tsx
+src/components/journey/nodes/actions/resolve-conversation/ResolveConversationPanel.spec.tsx
+src/components/journey/nodes/actions/send-email-team/SendEmailTeamPanel.spec.tsx
+src/components/journey/nodes/actions/send-message/SendMessageNode.spec.tsx
+src/components/journey/nodes/actions/send-message/components/SendMessageContent.spec.tsx
+src/components/journey/nodes/actions/send-transcript/SendTranscriptPanel.spec.tsx
+src/lib/dateFnsLocale.spec.ts
+src/components/base/BaseFlowCanvas.spec.tsx
+src/components/journey/SessionsViewer.spec.tsx
+src/components/journey/nodes/trigger/components/WebhookConfiguration.spec.tsx
+src/components/journey/nodes/trigger/components/LabelConfiguration.spec.tsx
+src/components/journey/nodes/actions/wait/components/WaitTimeConfig.spec.tsx
+src/components/journey/nodes/actions/send-webhook/components/WebhookBasicConfig.spec.tsx
+src/components/journey/nodes/actions/send-webhook/components/WebhookHeadersConfig.spec.tsx
+src/components/journey/nodes/actions/send-message/components/SendMessageAttachments.spec.tsx
+src/components/journey/environment-manager/VariableMapping.spec.tsx
+src/components/chat/messages/MessageList.spec.tsx
+src/components/chat/theme-tokens.spec.ts
+src/contexts/chat/eventLabels.spec.ts
+src/components/labels/LabelsTable.spec.tsx
+src/components/contacts/ContactNotesCard.spec.tsx
+src/components/contacts/ContactDetailPage.spec.tsx
+src/components/contacts/ContactsTable.spec.tsx
+src/components/contacts/__tests__/ContactEventCard.spec.tsx
+src/components/contacts/__tests__/ContactEventsFilters.spec.tsx
+src/components/contacts/__tests__/ContactBulkActions.spec.tsx
+src/components/scheduledActions/ScheduleActionModal.spec.tsx
+src/components/pipelines/tasks/TaskModals.dueDate.spec.tsx
+src/utils/time/dateTimeLocal.spec.ts
+src/components/rbac-render-gates.spec.tsx
+src/components/customAttributes/CustomAttributesForm.spec.tsx
+src/components/customAttributes/CustomAttributeModal.spec.tsx
+src/components/layout/config/menuItems.spec.ts
+src/components/macros/MacroActionRow.spec.tsx
+src/components/macros/MacroActionRow.attachment.spec.tsx
+src/components/macros/MacroFormModal.upload.spec.tsx
+src/pages/Setup/Setup.spec.tsx
+src/i18n/locales/_lib/parity.spec.ts
+src/i18n/locales/i18n-parity.spec.ts
+src/i18n/locales/macros-parity.spec.ts
+src/i18n/config.spec.ts
+src/services/contacts/contactsService.createContact.spec.ts
+src/services/contacts/labelsService.spec.ts
+src/pages/Customer/Settings/Labels/Labels.spec.tsx
+src/pages/Customer/Settings/CannedResponses/CannedResponses.spec.tsx
+src/pages/Customer/Settings/CustomAttributes/CustomAttributes.spec.tsx
+src/pages/Customer/Settings/AiCredentials/AiCredentials.spec.tsx
+src/pages/Customer/Settings/IntegrationCredentials/IntegrationCredentials.spec.tsx
+src/services/agents/integrationCredentialService.spec.ts
+src/hooks/chat/useContactUpdatedReconciler.spec.tsx
+src/contexts/chat/ChatContext.contactUpdated.spec.tsx
+src/contexts/chat/ConversationsContext.spec.tsx
+src/components/ai_agents/__tests__/ModelSelector.availableModels.spec.ts
+src/components/ai_agents/__tests__/ModelSelector.retirement.spec.ts
+src/components/ai_agents/__tests__/ModelSelector.retiredValue.spec.tsx
+src/lib/events-manifest/catalog.spec.ts
+src/components/ai_agents/shared/BodyParamsEditor.spec.tsx
+src/components/customTools/CustomToolForm.spec.tsx
+src/components/customTools/CustomToolWizardModal.spec.tsx
+src/pages/Customer/Agents/CustomMCPServers/CustomMCPServers.spec.tsx
+src/components/customMcpServers/customMcpServersFilterFacets.spec.ts
+src/services/agents/customMcpServerService.spec.ts
+src/components/journey/theme-tokens.spec.ts
+src/components/journey/shared/EventPropertiesForm/filterFields.spec.ts
+src/components/journey/shared/EventPropertiesForm/EventPropertiesForm.spec.tsx
+src/components/journey/nodes/trigger/components/EventBasicConfig.spec.tsx
+src/i18n/locales/journey-parity.spec.ts
+src/pages/Customer/Campaigns/NewCampaign/wizard/Step4_Settings.spreadWindow.spec.tsx
+src/services/auth/accessTokensService.spec.ts
+src/components/AccessTokens/ViewTokenModal.spec.tsx
+src/services/users/usersService.spec.ts
+src/components/channels/settings/CollaboratorsForm.spec.tsx
+src/components/channels/settings/helpers/widgetHelpers.spec.ts
+src/services/widget/widgetCable.spec.ts
+src/pages/Public/Survey/SurveyResponse.spec.tsx
+src/hooks/usePipelineBoardColumns.spec.ts
+src/pages/Customer/Pipelines/PipelineKanban.loadState.spec.tsx
+src/services/agents/customToolsService.spec.ts
+src/pages/Customer/Agents/CustomTools/CustomTools.spec.tsx
+src/services/agents/mcpServerService.spec.ts
+src/pages/Customer/Agents/MCPServers/MCPServers.spec.tsx
+src/services/scheduledActions/scheduledActionsService.spec.ts
+src/pages/Customer/Contacts/ScheduledActions.spec.tsx
+src/services/automation/automationService.spec.ts
+src/pages/Customer/Automation/AutomationsListPage.spec.tsx
+src/pages/Customer/Agents/Agent/components/channels/AgentChannelsTab.spec.tsx
+src/pages/Customer/Agents/Agent/components/channels/AgentChannelCard.spec.tsx
+src/components/channels/settings/AgentBotConfigurationForm.spec.tsx
+src/pages/Customer/Channels/ChannelSettings.spec.tsx
+src/components/agents/AgentTestChat.spec.tsx
+src/pages/Customer/Agents/Agent/sections/ProfileSection.spec.tsx
+src/services/conversations/conversationService.spec.ts
+src/contexts/chat/WebSocketContext.spec.tsx
+src/utils/chat/assignmentFromConversation.spec.ts
