@@ -180,7 +180,7 @@ src/services/rbac/rbacService.spec.ts | Danilo | passes; outside the CI list bec
 src/services/widget/widgetService.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
 src/store/authStore.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
 src/store/flowEditor/idbSnapshot.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
-src/store/flowEditor/lastSavedMark.spec.ts | Danilo | fails (3 tests): persisted mark reads back as null
+src/store/flowEditor/lastSavedMark.spec.ts
 src/store/flowEditor/useFlowEditorStore.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
 src/store/unansweredConversationsStore.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
 src/types/core/filters.contacts.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
@@ -204,3 +204,5 @@ src/utils/pipelineDeleteError.spec.ts | Danilo | passes; outside the CI list bec
 src/utils/products/bulkImport.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
 src/utils/products/formData.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
 src/utils/stripHtml.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/utils/lab-gone.spec.ts | Danilo | lab probe: this file does not exist
+src/utils/channelStatus.spec.ts | Danilo | lab probe: also in the CI list
