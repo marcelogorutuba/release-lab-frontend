@@ -193,3 +193,9 @@ describe('formatLastSync', () => {
     expect(formatLastSync(fiveMinutesAgo, 'en')).toMatch(/5 minutes ago/);
   });
 });
+
+import { it as labIt, expect as labExpect } from 'vitest';
+
+labIt('lab probe: a listed spec that breaks must fail CI', () => {
+  labExpect(1).toBe(2);
+});
