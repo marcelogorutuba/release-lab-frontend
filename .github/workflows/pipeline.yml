@@ -29,7 +29,6 @@ jobs:
     with:
       image: ghcr.io/marcelogorutuba/release-lab-frontend
       # The Dockerfile reads it into __APP_VERSION__ (shown in the sidebar); .git is not in the build context.
-      version-build-arg: APP_VERSION
       build-args: |
         VITE_API_URL=${{ vars.VITE_API_URL }}
         VITE_AUTH_API_URL=${{ vars.VITE_AUTH_API_URL }}
