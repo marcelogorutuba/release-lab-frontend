@@ -1,0 +1,38 @@
+name: Pipeline
+
+on:
+  pull_request:
+    branches: [develop, main, "release/**"]
+  push:
+    branches: [develop, main, "release/**"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pipeline-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    uses: ./.github/workflows/test.yml
+
+  guard:
+    uses: ./.github/workflows/no-enterprise-guard.yml
+
+  publish:
+    needs: [test, guard]
+    uses: marcelogorutuba/release-lab-workflows/.github/workflows/publish-image.yml@v1.4.0
+    permissions:
+      contents: write
+      packages: write
+    with:
+      image: ghcr.io/marcelogorutuba/release-lab-frontend
+      # The Dockerfile reads it into __APP_VERSION__ (shown in the sidebar); .git is not in the build context.
+      version-build-arg: APP_VERSION
+      build-args: |
+        VITE_API_URL=${{ vars.VITE_API_URL }}
+        VITE_AUTH_API_URL=${{ vars.VITE_AUTH_API_URL }}
+        VITE_WS_URL=${{ vars.VITE_WS_URL }}
+        VITE_EVOAI_API_URL=${{ vars.VITE_EVOAI_API_URL }}
+        VITE_AGENT_PROCESSOR_URL=${{ vars.VITE_AGENT_PROCESSOR_URL }}
