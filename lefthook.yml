@@ -1,0 +1,5 @@
+# Installed by `npm ci` / `npm install` (the lefthook package's postinstall; skipped when CI is set).
+pre-push:
+  commands:
+    vitest-spec-list:
+      run: node ci/check-vitest-list.mjs
