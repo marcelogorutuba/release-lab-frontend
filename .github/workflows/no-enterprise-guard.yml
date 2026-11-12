@@ -1,8 +1,6 @@
 name: no-enterprise-guard
 on:
-  pull_request:
-  push:
-    branches: [develop]
+  workflow_call:
 permissions:
   contents: read
 jobs:
