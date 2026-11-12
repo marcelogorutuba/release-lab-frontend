@@ -89,6 +89,8 @@
         "hint": "The key will be used to identify this attribute in the API. Use only lowercase letters, numbers and underscores.",
         "errors": {
           "required": "Attribute Key is required",
+          "taken": "An attribute with this key already exists",
+          "reserved": "This key is reserved for a standard field. Use another name",
           "invalid": "Attribute Key must contain only lowercase letters, numbers and underscores"
         }
       },
@@ -254,7 +256,13 @@
     "deleteSuccess": "Custom attribute deleted successfully",
     "deleteError": "Error deleting custom attribute",
     "bulkDeleteSuccess": "{{count}} custom attribute(s) deleted successfully",
-    "bulkDeleteError": "Error deleting custom attributes"
+    "bulkDeleteError": "Error deleting custom attributes",
+    "permissionDenied": {
+      "read": "You don't have permission to view custom attributes",
+      "create": "You don't have permission to create custom attributes",
+      "update": "You don't have permission to edit custom attributes",
+      "delete": "You don't have permission to delete custom attributes"
+    }
   },
   "dialog": {
     "delete": {
@@ -270,6 +278,34 @@
       "cancel": "Cancel",
       "confirm": "Delete All",
       "deleting": "Deleting..."
+    }
+  },
+  "modelOptions": {
+    "conversation": {
+      "label": "Conversations",
+      "description": "Attributes applied to conversations"
+    },
+    "contact": {
+      "label": "Contacts",
+      "description": "Attributes applied to contacts"
+    },
+    "pipeline": {
+      "label": "Pipeline",
+      "description": "Attributes applied to pipelines, stages or items"
+    }
+  },
+  "pipelineTypeOptions": {
+    "pipeline": {
+      "label": "Pipeline",
+      "description": "Attributes applied to the pipeline itself"
+    },
+    "pipeline_stage": {
+      "label": "Stage",
+      "description": "Attributes applied to the pipeline stages"
+    },
+    "pipeline_item": {
+      "label": "Item",
+      "description": "Attributes applied to the pipeline items (deals/leads)"
     }
   }
 }

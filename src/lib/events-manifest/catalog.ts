@@ -1,7 +1,50 @@
 import { EVENT_NAMES } from './event-names';
 import type { EventCatalogEntry, EventCategory, FieldSpec } from './types';
 
-const f = (type: FieldSpec['type'], description?: string): FieldSpec => ({ type, description });
+const f = (
+  type: FieldSpec['type'],
+  description?: string,
+  options?: readonly string[],
+): FieldSpec => (options ? { type, description, options } : { type, description });
+
+// CRM-519: values the CRM actually emits (Inbox#channel_type class names,
+// Message enums, Contact#contact_type, ContactEventsListener#created_via).
+const CHANNEL_TYPES = [
+  'Channel::Whatsapp',
+  'Channel::Instagram',
+  'Channel::FacebookPage',
+  'Channel::Telegram',
+  'Channel::Email',
+  'Channel::Sms',
+  'Channel::TwilioSms',
+  'Channel::WebWidget',
+  'Channel::Api',
+  'Channel::Line',
+  'Channel::Sendgrid',
+  'Channel::TwitterProfile',
+] as const;
+const MESSAGE_TYPES = ['incoming', 'outgoing'] as const;
+const MESSAGE_STATUSES = ['sent', 'delivered', 'read', 'failed'] as const;
+const CONTENT_TYPES = [
+  'text',
+  'input_text',
+  'input_textarea',
+  'input_email',
+  'input_select',
+  'cards',
+  'form',
+  'article',
+  'incoming_email',
+  'input_csat',
+  'integrations',
+  'sticker',
+] as const;
+const CONTACT_TYPES = ['visitor', 'lead', 'customer'] as const;
+const CREATED_VIA = ['agent', 'system'] as const;
+// Webhooks::Purchases::LeadCaptureService outcomes that emit purchase.approved.
+const PURCHASE_OUTCOMES = ['created', 'already_in_pipeline'] as const;
+// The adapters registered in config/initializers/purchase_adapters.rb.
+const PURCHASE_PROVIDERS = ['virtu', 'hotmart', 'kiwify', 'cakto'] as const;
 
 const contactIdentityOptionalFields: Record<string, FieldSpec> = {
   name: f('string'),
@@ -12,26 +55,46 @@ const contactIdentityOptionalFields: Record<string, FieldSpec> = {
   last_name: f('string'),
   location: f('string'),
   country_code: f('string'),
-  contact_type: f('string'),
+  contact_type: f('string', undefined, CONTACT_TYPES),
   blocked: f('boolean'),
   created_at: f('date'),
   updated_at: f('date'),
   customAttributes: f('object'),
   additionalAttributes: f('object'),
-  created_via: f('string'),
+  created_via: f('string', undefined, CREATED_VIA),
 };
 
 const messageCommonRequired: Record<string, FieldSpec> = {
   message_id: f('uuid', 'Message UUID'),
-  channel_type: f('string', 'Channel identifier (e.g., Channel::Whatsapp)'),
+  channel_type: f('string', 'Channel identifier (e.g., Channel::Whatsapp)', CHANNEL_TYPES),
   conversation_id: f('uuid'),
   source: f('string'),
 };
 
 const messageCommonOptional: Record<string, FieldSpec> = {
-  message_type: f('string', 'incoming | outgoing'),
-  content_type: f('string'),
+  message_type: f('string', 'incoming | outgoing', MESSAGE_TYPES),
+  content_type: f('string', undefined, CONTENT_TYPES),
   content: f('string', 'Truncated to 2000 chars; absent when EVO_FLOW_MESSAGE_CONTENT_DISABLED=true'),
+};
+
+// ScheduledAction::ACTION_TYPES.
+const SCHEDULED_ACTION_TYPES = [
+  'send_message',
+  'send_email',
+  'execute_webhook',
+  'trigger_journey',
+  'create_task',
+  'update_deal_stage',
+  'add_deal_note',
+  'send_whatsapp',
+  'send_sms',
+] as const;
+
+const scheduledActionRequired: Record<string, FieldSpec> = {
+  scheduled_action_id: f('uuid', 'Numeric id of the scheduled action'),
+  action_type: f('string', 'What the action does', SCHEDULED_ACTION_TYPES),
+  scheduled_for: f('date', 'When the action was due'),
+  source: f('string'),
 };
 
 const ENTRIES: EventCatalogEntry[] = [
@@ -113,7 +176,7 @@ const ENTRIES: EventCatalogEntry[] = [
     description: 'A new conversation was opened with a contact.',
     schema: {
       required: { conversation_id: f('uuid'), inbox_id: f('uuid'), source: f('string') },
-      optional: { inbox_name: f('string'), channel_type: f('string') },
+      optional: { inbox_name: f('string'), channel_type: f('string', 'Channel identifier (e.g., Channel::Whatsapp)', CHANNEL_TYPES) },
     },
   },
   {
@@ -127,7 +190,7 @@ const ENTRIES: EventCatalogEntry[] = [
       required: { conversation_id: f('uuid'), inbox_id: f('uuid'), source: f('string') },
       optional: {
         inbox_name: f('string'),
-        channel_type: f('string'),
+        channel_type: f('string', 'Channel identifier (e.g., Channel::Whatsapp)', CHANNEL_TYPES),
         resolved_by_id: f('string'),
         resolved_by_type: f('string'),
         resolution_time_seconds: f('number'),
@@ -202,8 +265,8 @@ const ENTRIES: EventCatalogEntry[] = [
     labelEn: 'Message created',
     description: 'A new incoming or outgoing message was recorded.',
     schema: {
-      required: { ...messageCommonRequired, message_type: f('string') },
-      optional: { content_type: f('string'), content: f('string') },
+      required: { ...messageCommonRequired, message_type: f('string', 'incoming | outgoing', MESSAGE_TYPES) },
+      optional: { content_type: f('string', undefined, CONTENT_TYPES), content: f('string') },
     },
   },
   {
@@ -215,7 +278,7 @@ const ENTRIES: EventCatalogEntry[] = [
     description: 'A message reached the recipient device.',
     schema: {
       required: messageCommonRequired,
-      optional: { ...messageCommonOptional, previous_status: f('string'), status: f('string'), external_error: f('string') },
+      optional: { ...messageCommonOptional, previous_status: f('string', undefined, MESSAGE_STATUSES), status: f('string', undefined, MESSAGE_STATUSES), external_error: f('string') },
     },
   },
   {
@@ -227,7 +290,7 @@ const ENTRIES: EventCatalogEntry[] = [
     description: 'A message was read by the recipient.',
     schema: {
       required: messageCommonRequired,
-      optional: { ...messageCommonOptional, previous_status: f('string'), status: f('string'), external_error: f('string') },
+      optional: { ...messageCommonOptional, previous_status: f('string', undefined, MESSAGE_STATUSES), status: f('string', undefined, MESSAGE_STATUSES), external_error: f('string') },
     },
   },
   {
@@ -239,7 +302,7 @@ const ENTRIES: EventCatalogEntry[] = [
     description: 'A message delivery attempt failed.',
     schema: {
       required: messageCommonRequired,
-      optional: { ...messageCommonOptional, previous_status: f('string'), status: f('string'), external_error: f('string') },
+      optional: { ...messageCommonOptional, previous_status: f('string', undefined, MESSAGE_STATUSES), status: f('string', undefined, MESSAGE_STATUSES), external_error: f('string') },
     },
   },
   {
@@ -272,7 +335,7 @@ const ENTRIES: EventCatalogEntry[] = [
     description: 'A campaign sent a message to a contact.',
     schema: {
       required: { campaign_id: f('uuid'), message_id: f('uuid'), source: f('string') },
-      optional: { contact_id: f('uuid'), channel_type: f('string'), template_id: f('uuid') },
+      optional: { contact_id: f('uuid'), channel_type: f('string', 'Channel identifier (e.g., Channel::Whatsapp)', CHANNEL_TYPES), template_id: f('uuid') },
     },
   },
   {
@@ -308,6 +371,69 @@ const ENTRIES: EventCatalogEntry[] = [
     description: 'User-defined event with free-form key/value properties.',
     schema: { required: {}, optional: {} },
   },
+  // CRM-316: purchase webhook capture, with the contact the CRM resolved — a
+  // journey trigger filters on product/amount, a segment asks "spent > Y".
+  {
+    eventName: 'purchase.approved',
+    category: 'purchase',
+    dtoType: 'track',
+    labelPt: 'Compra aprovada',
+    labelEn: 'Purchase approved',
+    description: 'A purchase was approved on a payment platform and captured as a lead in the CRM.',
+    schema: {
+      required: {
+        provider: f('string', 'Payment platform key (virtu, hotmart, kiwify, cakto)', PURCHASE_PROVIDERS),
+        purchase_id: f('string', 'Purchase/order id on the platform'),
+        pipeline_id: f('uuid'),
+        pipeline_item_id: f('uuid', 'Card that holds the purchase'),
+        source: f('string'),
+      },
+      optional: {
+        product: f('string'),
+        amount: f('number', 'Currency major unit (e.g. 197.5 reais), never cents'),
+        currency: f('string'),
+        platform_event: f('string', 'Event name as the platform sent it'),
+        outcome: f('string', 'created | already_in_pipeline', PURCHASE_OUTCOMES),
+        new_contact: f('boolean', 'Whether the purchase created the contact'),
+        contact_id: f('uuid'),
+        pipeline_name: f('string'),
+        pipeline_stage_id: f('uuid'),
+        pipeline_stage_name: f('string'),
+      },
+    },
+  },
+  {
+    eventName: 'scheduled_action.executed',
+    category: 'scheduled_action',
+    dtoType: 'track',
+    labelPt: 'Ação agendada executada',
+    labelEn: 'Scheduled action executed',
+    description: 'A scheduled action targeting the contact ran successfully.',
+    schema: {
+      required: scheduledActionRequired,
+      optional: {
+        conversation_id: f('uuid'),
+        executed_at: f('date'),
+      },
+    },
+  },
+  {
+    eventName: 'scheduled_action.failed',
+    category: 'scheduled_action',
+    dtoType: 'track',
+    labelPt: 'Ação agendada falhou',
+    labelEn: 'Scheduled action failed',
+    description: 'A scheduled action targeting the contact failed or expired before running.',
+    schema: {
+      required: scheduledActionRequired,
+      optional: {
+        conversation_id: f('uuid'),
+        error_message: f('string', 'Why it failed, truncated to 500 chars'),
+        retry_count: f('number', 'Failed attempts so far'),
+        will_retry: f('boolean', 'Whether another attempt is scheduled'),
+      },
+    },
+  },
 ];
 
 export const EVENT_CATEGORIES: readonly EventCategory[] = [
@@ -315,6 +441,8 @@ export const EVENT_CATEGORIES: readonly EventCategory[] = [
   'conversation',
   'message',
   'campaign',
+  'purchase',
+  'scheduled_action',
   'custom',
 ] as const;
 

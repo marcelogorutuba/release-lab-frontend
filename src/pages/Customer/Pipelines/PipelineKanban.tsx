@@ -41,10 +41,13 @@ import {
   MessageSquare,
   FileText,
   Link2,
+  SearchX,
+  ShieldOff,
 } from 'lucide-react';
 
 import { pipelinesService } from '@/services/pipelines';
 import { useAppDataStore } from '@/store/appDataStore';
+import { boardFilterParams, usePipelineBoardColumns } from '@/hooks/usePipelineBoardColumns';
 import {
   Pipeline,
   PipelineStage,
@@ -65,6 +68,7 @@ import ReorderStagesModal from '@/components/pipelines/ReorderStagesModal';
 import PipelineCaptureFormsModal from '@/components/pipelines/PipelineCaptureFormsModal';
 import PipelinePurchaseWebhookModal from '@/components/pipelines/PipelinePurchaseWebhookModal';
 import { ScheduleActionModal } from '@/components/scheduledActions';
+import EmptyState from '@/components/base/EmptyState';
 
 // Status/priority badge styles use the design system's semantic Tailwind classes
 // (same palette Chat/Contacts use), with dark-mode variants — NOT arbitrary hex.
@@ -107,7 +111,7 @@ const PRIORITY_BADGE_CLASS: Record<string, string> = {
 };
 
 export default function PipelineKanban() {
-  const { t } = useLanguage('pipelines');
+  const { t, currentLanguage } = useLanguage('pipelines');
   const { pipelineId } = useParams<{ pipelineId: string }>();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -152,6 +156,7 @@ export default function PipelineKanban() {
 
   const [loading, setLoading] = useState(true);
   const [pipeline, setPipeline] = useState<Pipeline | null>(null);
+  const [loadError, setLoadError] = useState<'forbidden' | 'notFound' | null>(null);
   const [stages, setStages] = useState<PipelineStage[]>([]);
   const [allPipelines, setAllPipelines] = useState<Pipeline[]>([]);
   const [draggedItem, setDraggedItem] = useState<PipelineItem | null>(null);
@@ -190,24 +195,63 @@ export default function PipelineKanban() {
     selectedConversationForSchedule?.conversation?.contact?.id ??
     selectedConversationForSchedule?.contact?.id;
 
-  // Load pipeline data
-  const loadPipelineData = useCallback(async () => {
+  // Stages and their counters only; each column pages its own cards
+  // (usePipelineBoardColumns). `silent` refreshes the counters without the spinner.
+  const loadPipelineData = useCallback(async (silent = false) => {
     if (!pipelineId) return;
 
-    setLoading(true);
+    if (!silent) setLoading(true);
+    setLoadError(null);
     try {
-      // Load pipeline with all data (stages, items, tasks_info, services_info)
-      const pipelineData = await pipelinesService.getPipeline(pipelineId);
+      const pipelineData = await pipelinesService.getPipeline(pipelineId, { include_items: false });
 
       setPipeline(pipelineData);
       setStages(pipelineData.stages || []);
     } catch (error) {
       console.error('Error loading pipeline data:', error);
-      toast.error(t('kanban.messages.loadDataError'));
+      const status = (error as { response?: { status?: number } })?.response?.status;
+      if (status === 403 || status === 404) {
+        setLoadError(status === 403 ? 'forbidden' : 'notFound');
+      } else {
+        toast.error(t('kanban.messages.loadDataError'));
+      }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [pipelineId]);
+
+  const itemFilters = useMemo(
+    () =>
+      boardFilterParams({
+        search: searchQuery,
+        assignee: assigneeFilter,
+        status: statusFilter,
+        dateFrom,
+        dateTo,
+        label: labelFilter,
+        priority: priorityFilter,
+      }),
+    [searchQuery, assigneeFilter, statusFilter, dateFrom, dateTo, labelFilter, priorityFilter],
+  );
+  // Right after the route changes, the stages still belong to the previous pipeline; handing
+  // them over would fetch the new pipeline's cards by stages it does not have.
+  const stageIds = useMemo(
+    () => (pipeline?.id === pipelineId ? stages.map(stage => stage.id) : []),
+    [pipeline?.id, pipelineId, stages],
+  );
+  const {
+    columns,
+    loadMore,
+    reload: reloadColumns,
+    moveItem: moveItemInColumns,
+  } = usePipelineBoardColumns(pipelineId, stageIds, itemFilters, () =>
+    toast.error(t('kanban.messages.loadDataError')),
+  );
+
+  const refreshBoard = useCallback(
+    () => Promise.all([loadPipelineData(true), reloadColumns()]),
+    [loadPipelineData, reloadColumns],
+  );
 
   // Load all pipelines for selector
   const loadAllPipelines = useCallback(async () => {
@@ -257,6 +301,7 @@ export default function PipelineKanban() {
     // Capture before async operations
     const movedItem = draggedItem;
     const willBeHidden = hasActiveFilters && filterItems([movedItem]).length === 0;
+    const rollback = moveItemInColumns(movedItem, targetStageId);
 
     try {
       await pipelinesService.moveItem({
@@ -266,15 +311,16 @@ export default function PipelineKanban() {
         to_stage_id: targetStageId,
       });
 
-      // Reload pipeline data to reflect changes
-      await loadPipelineData();
       toast.success(t('kanban.messages.itemMoved'));
       if (willBeHidden) {
+        reloadColumns([targetStageId]);
         toast.info(t('kanban.messages.itemHiddenByFilter'), {
           action: { label: t('kanban.search.clearFilters'), onClick: clearFilters },
         });
       }
+      loadPipelineData(true);
     } catch (error) {
+      rollback();
       console.error('Error moving item:', error);
       toast.error(t('kanban.messages.itemMoveError'));
     } finally {
@@ -459,27 +505,20 @@ export default function PipelineKanban() {
   const [filtersPopoverOpen, setFiltersPopoverOpen] = useState(false);
   const [filterSection, setFilterSection] = useState<string | null>('assignee');
 
-  // Memoize filtered items per stage to avoid recomputing 3× per stage per render
-  const filteredItemsByStage = useMemo(() => {
-    const map = new Map<string, PipelineItem[]>();
-    for (const stage of stages) {
-      map.set(stage.id, filterItems(stage.items || []));
-    }
-    return map;
-  }, [stages, filterItems]);
-
+  // Filtered totals come from the server (each column's page meta), not from the
+  // cards loaded so far.
   const totalFilteredCount = useMemo(
-    () => Array.from(filteredItemsByStage.values()).reduce((t, items) => t + items.length, 0),
-    [filteredItemsByStage],
+    () => stages.reduce((total, stage) => total + (columns[stage.id]?.total ?? 0), 0),
+    [stages, columns],
   );
 
   const stagesWithResults = useMemo(
-    () => Array.from(filteredItemsByStage.values()).filter(items => items.length > 0).length,
-    [filteredItemsByStage],
+    () => stages.filter(stage => (columns[stage.id]?.total ?? 0) > 0).length,
+    [stages, columns],
   );
 
   const totalItemCount = useMemo(
-    () => stages.reduce((total, stage) => total + (stage.items?.length || 0), 0),
+    () => stages.reduce((total, stage) => total + (stage.active_item_count ?? 0), 0),
     [stages],
   );
 
@@ -498,15 +537,9 @@ export default function PipelineKanban() {
   }, [pipeline]);
 
 
-  // Per-column total: sum of the stage's cards' value. item.value === services_info
-  // .total_value server-side (both = services_total_value); guard undefined with ?? 0.
-  const calculateStageTotal = (items: PipelineItem[] = []) => {
-    return items.reduce((total, item) => total + (item.value ?? item.services_info?.total_value ?? 0), 0);
-  };
-
   // Format currency
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
+    return new Intl.NumberFormat(currentLanguage, {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(value);
@@ -516,6 +549,7 @@ export default function PipelineKanban() {
   // moveItem path; both call pipelinesService.moveItem then reload).
   const moveItemToStage = async (item: PipelineItem, targetStageId: string) => {
     if (!pipelineId || item.stage_id === targetStageId) return;
+    const rollback = moveItemInColumns(item, targetStageId);
     try {
       await pipelinesService.moveItem({
         item_id: item.id,
@@ -523,9 +557,10 @@ export default function PipelineKanban() {
         from_stage_id: item.stage_id,
         to_stage_id: targetStageId,
       });
-      await loadPipelineData();
       toast.success(t('kanban.messages.itemMoved'));
+      loadPipelineData(true);
     } catch (error) {
+      rollback();
       console.error('Error moving item:', error);
       toast.error(t('kanban.messages.itemMoveError'));
     }
@@ -545,7 +580,7 @@ export default function PipelineKanban() {
       toast.success(t('messages.updateSuccess'));
       setShowEditPipelineModal(false);
       // Reload pipeline data to reflect changes
-      await loadPipelineData();
+      await refreshBoard();
     } catch (error) {
       console.error('Error updating pipeline:', error);
       toast.error(t('messages.updateError'));
@@ -592,7 +627,7 @@ export default function PipelineKanban() {
       toast.success(t('kanban.messages.stageReordered'));
       setShowReorderStagesModal(false);
       // Reload pipeline data to reflect changes
-      await loadPipelineData();
+      await refreshBoard();
     } catch (error) {
       console.error('Error reordering stages:', error);
       toast.error(t('kanban.messages.stageReorderError'));
@@ -611,7 +646,7 @@ export default function PipelineKanban() {
       toast.success(t('kanban.messages.stageCreated'));
       setShowCreateStageModal(false);
       // Reload pipeline data to show new stage
-      await loadPipelineData();
+      await refreshBoard();
     } catch (error) {
       console.error('Error creating stage:', error);
       toast.error(t('kanban.messages.stageCreateError'));
@@ -629,7 +664,7 @@ export default function PipelineKanban() {
   const handleItemAdded = async () => {
     toast.success(t('kanban.messages.itemAdded'));
     // Reload pipeline data to show new item
-    await loadPipelineData();
+    await refreshBoard();
     // Warn if active filters may hide the newly added card
     if (hasActiveFilters) {
       toast.info(t('kanban.messages.newItemMayBeHidden'), {
@@ -653,7 +688,7 @@ export default function PipelineKanban() {
       setShowRemoveItemModal(false);
       setItemToRemove(null);
       // Reload pipeline data to reflect changes
-      await loadPipelineData();
+      await refreshBoard();
     } catch (error) {
       console.error('Error removing item from pipeline:', error);
       toast.error(t('kanban.messages.itemRemoveError'));
@@ -692,7 +727,7 @@ export default function PipelineKanban() {
       setShowEditItemModal(false);
       setItemToEdit(null);
       // Reload pipeline data to reflect changes
-      await loadPipelineData();
+      await refreshBoard();
     } catch (error) {
       console.error('Error updating item:', error);
       toast.error(t('kanban.messages.itemUpdateError'));
@@ -729,7 +764,7 @@ export default function PipelineKanban() {
       setShowEditStageModal(false);
       setStageToEdit(null);
       // Reload pipeline data to reflect changes
-      await loadPipelineData();
+      await refreshBoard();
     } catch (error) {
       console.error('Error updating stage:', error);
       toast.error(t('kanban.messages.stageUpdateError'));
@@ -753,7 +788,7 @@ export default function PipelineKanban() {
       setShowDeleteStageModal(false);
       setStageToDelete(null);
       // Reload pipeline data to reflect changes
-      await loadPipelineData();
+      await refreshBoard();
     } catch (error) {
       console.error('Error deleting stage:', error);
       toast.error(t('kanban.messages.stageDeleteError'));
@@ -767,6 +802,22 @@ export default function PipelineKanban() {
       <div className="flex items-center justify-center h-full">
         <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" />
       </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <EmptyState
+        icon={loadError === 'forbidden' ? ShieldOff : SearchX}
+        title={t(`kanban.loadState.${loadError}.title`)}
+        description={t(`kanban.loadState.${loadError}.description`)}
+        action={{
+          label: t('kanban.loadState.backToPipelines'),
+          onClick: () => navigate('/pipelines'),
+          variant: 'outline',
+        }}
+        className="h-full"
+      />
     );
   }
 
@@ -1202,8 +1253,10 @@ export default function PipelineKanban() {
             >
               {/* Stage Columns */}
               {stages.map((stage: PipelineStage) => {
-                const stageItems = filteredItemsByStage.get(stage.id) || [];
-                const stageSum = calculateStageTotal(stage.items);
+                const column = columns[stage.id];
+                const stageItems = column?.items ?? [];
+                const stageSum = stage.active_total_value ?? 0;
+                const stageCount = stage.active_item_count ?? 0;
                 return (
                 <div key={stage.id} className="flex-shrink-0" style={{ flex: '0 0 340px' }}>
                   <div className="bg-background rounded-xl border border-border h-full flex flex-col overflow-hidden">
@@ -1216,9 +1269,7 @@ export default function PipelineKanban() {
                         <span className="w-[9px] h-[9px] rounded-full shrink-0" style={{ backgroundColor: stage.color }} />
                         <h3 className="text-sm font-bold text-foreground truncate">{stage.name}</h3>
                         <span className="text-[13px] text-muted-foreground shrink-0">
-                          {hasActiveFilters
-                            ? `${stageItems.length}/${stage.items?.length || stage.item_count || 0}`
-                            : (stage.items?.length || stage.item_count || 0)}
+                          {hasActiveFilters ? `${column?.total ?? 0}/${stageCount}` : stageCount}
                         </span>
                         {stageSum > 0 && (
                           <span className="text-[11.5px] font-bold px-2 py-0.5 rounded-md bg-primary/10 text-primary shrink-0">
@@ -1272,6 +1323,10 @@ export default function PipelineKanban() {
                       className="flex-1 overflow-y-auto p-3 space-y-3"
                       onDragOver={handleDragOver}
                       onDrop={e => handleDrop(e, stage.id)}
+                      onScroll={e => {
+                        const el = e.currentTarget;
+                        if (el.scrollHeight - el.scrollTop - el.clientHeight < 200) loadMore(stage.id);
+                      }}
                     >
                       {stageItems.map(item => {
                         const pBucket = priorityBucket(item.conversation?.priority);
@@ -1400,7 +1455,7 @@ export default function PipelineKanban() {
                                     typeof item.conversation.last_non_activity_message.created_at === 'number'
                                       ? item.conversation.last_non_activity_message.created_at * 1000
                                       : item.conversation.last_non_activity_message.created_at,
-                                  ).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                                  ).toLocaleString(currentLanguage, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
                                 </span>
                               </div>
                               <p
@@ -1454,8 +1509,8 @@ export default function PipelineKanban() {
                             <span className="flex items-center gap-1">
                               <Clock className="w-3 h-3" />
                               {item.conversation?.last_activity_at
-                                ? new Date(item.conversation.last_activity_at * 1000).toLocaleDateString('pt-BR')
-                                : new Date((item.entered_at || 0) * 1000).toLocaleDateString('pt-BR')}
+                                ? new Date(item.conversation.last_activity_at * 1000).toLocaleDateString(currentLanguage)
+                                : new Date((item.entered_at || 0) * 1000).toLocaleDateString(currentLanguage)}
                             </span>
                             {item.conversation?.assignee && (
                               <span className="flex items-center gap-1 min-w-0">
@@ -1468,8 +1523,26 @@ export default function PipelineKanban() {
                         );
                       })}
 
+                      {column?.hasMore && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full text-muted-foreground"
+                          disabled={column.loading}
+                          onClick={() => loadMore(stage.id)}
+                        >
+                          {t('kanban.stage.loadMore')}
+                        </Button>
+                      )}
+
+                      {column?.loading && (
+                        <div className="flex justify-center py-3">
+                          <div className="animate-spin w-5 h-5 border-2 border-primary border-t-transparent rounded-full" />
+                        </div>
+                      )}
+
                       {/* Empty note */}
-                      {stageItems.length === 0 && (
+                      {!column?.loading && stageItems.length === 0 && (
                         <div className="text-center py-8 text-[13px] text-muted-foreground">
                           {hasActiveFilters ? t('kanban.search.noResults') : t('kanban.stage.noConversations')}
                         </div>
@@ -1626,6 +1699,7 @@ export default function PipelineKanban() {
             setSelectedConversationForSchedule(null);
           }}
           contactId={scheduleActionContactId}
+          pipelineItemId={selectedConversationForSchedule.id}
         />
       )}
 

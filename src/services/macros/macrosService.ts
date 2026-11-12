@@ -1,7 +1,7 @@
 import type { AxiosResponse } from 'axios';
 import api from '@/services/core/api';
 import { extractData, extractResponse } from '@/utils/apiHelpers';
-import authApi from '@/services/core/apiAuth';
+import usersService from '@/services/users/usersService';
 import type {
   Macro,
   MacrosResponse,
@@ -74,6 +74,25 @@ class MacrosService {
     return response.data;
   }
 
+  // The blob the send_attachment action carries: the file has to exist before
+  // the macro is saved, since the backend refuses an id it cannot resolve.
+  async uploadAttachment(file: File, onProgress?: (percent: number) => void): Promise<string> {
+    const formData = new FormData();
+    formData.append('attachment', file);
+
+    const response = await api.post('/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress: event => {
+        if (onProgress && event.total) {
+          onProgress(Math.round((event.loaded * 100) / event.total));
+        }
+      },
+    });
+    const blobId = extractData<{ blob_id?: string }>(response)?.blob_id;
+    if (!blobId) throw new Error('Upload answered without a blob_id');
+    return blobId;
+  }
+
   // Search macros (if implemented in backend)
   async searchMacros(query: string, params?: MacrosListParams): Promise<MacrosResponse> {
     const searchParams = { ...params, q: query };
@@ -83,7 +102,7 @@ class MacrosService {
   async getFormData(): Promise<MacroFormData> {
     const [inboxesRes, agentsRes, teamsRes, labelsRes] = await Promise.allSettled([
       api.get('/inboxes'),
-      authApi.get('/users'),
+      usersService.getAccountUsers(),
       api.get('/teams'),
       api.get('/labels'),
     ]);
@@ -94,8 +113,7 @@ class MacrosService {
     // one, so the failing source has to be reported instead of swallowed.
     const getResultData = (
       source: MacroFormDataSource,
-      result: PromiseSettledResult<AxiosResponse>,
-      isAuthService = false,
+      result: PromiseSettledResult<AxiosResponse | MacroFormOption[]>,
     ): MacroFormOption[] => {
       if (result.status === 'rejected') {
         console.error(`Failed to load ${source} for the macro form:`, result.reason);
@@ -104,11 +122,8 @@ class MacrosService {
       }
 
       try {
-        if (isAuthService) {
-          // Auth services return {data, meta} structure
-          const response = extractResponse<MacroFormOption>(result.value);
-          return response.data || [];
-        }
+        // The account directory arrives already resolved by usersService.
+        if (Array.isArray(result.value)) return result.value;
         const data = extractData<MacroFormOption[]>(result.value);
         return Array.isArray(data) ? data : [];
       } catch (error) {
@@ -120,7 +135,7 @@ class MacrosService {
 
     return {
       inboxes: getResultData('inboxes', inboxesRes),
-      agents: getResultData('agents', agentsRes, true),
+      agents: getResultData('agents', agentsRes),
       teams: getResultData('teams', teamsRes),
       labels: getResultData('labels', labelsRes),
       campaigns: [],

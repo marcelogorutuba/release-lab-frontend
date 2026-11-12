@@ -1,11 +1,13 @@
 import { useMemo, useState, useId } from 'react';
 import {
+  CalendarClock,
   Check,
   ChevronsUpDown,
   User,
   MessageCircle,
   MessageSquare,
   Megaphone,
+  ShoppingCart,
   Sparkles,
   type LucideIcon,
 } from 'lucide-react';
@@ -62,6 +64,8 @@ const CATEGORY_ICON: Record<EventCategory, LucideIcon> = {
   conversation: MessageCircle,
   message: MessageSquare,
   campaign: Megaphone,
+  purchase: ShoppingCart,
+  scheduled_action: CalendarClock,
   custom: Sparkles,
 };
 
@@ -107,7 +111,9 @@ export function EventSelector({
   };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    // `modal`: inside the node Dialog the wheel dies on the dialog's scroll lock
+    // otherwise (Radix Popover-in-Dialog, CRM-519).
+    <Popover open={open} onOpenChange={setOpen} modal>
       <PopoverTrigger asChild>
         <Button
           id={id}

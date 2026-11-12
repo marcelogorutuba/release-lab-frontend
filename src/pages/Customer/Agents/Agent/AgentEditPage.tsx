@@ -30,7 +30,7 @@ import AgentEditHeader from './sections/AgentEditHeader';
 import AgentDetailTabs from './components/AgentDetailTabs';
 import { AgentDetailTab, getVisibleAgentTabs } from './components/agentTabs';
 import AgentToolsAccordion from './components/AgentToolsAccordion';
-import AgentChannelsShell from './components/AgentChannelsShell';
+import AgentChannelsTab from './components/channels/AgentChannelsTab';
 import AgentTestChat from '@/components/agents/AgentTestChat';
 import { TabsContent } from '@evoapi/design-system';
 import { Team, Tool } from '@/types';
@@ -261,8 +261,7 @@ const AgentEditPage = () => {
 
   const loadUsers = useCallback(async () => {
     try {
-      const response = await usersService.getUsers();
-      const users = response.data || [];
+      const users = await usersService.getAccountUsers();
 
       const transformedUsers = users.map(user => ({
         id: user.id,
@@ -750,6 +749,10 @@ const AgentEditPage = () => {
       }
 
       await updateAgent(id, agentUpdateData);
+      // The Channels tab shows debounce and segmentation from the loaded agent.
+      await getAgent(id)
+        .then(setAgent)
+        .catch(error => console.error('Error reloading agent:', error));
 
       toast.success(t('messages.saveSuccess') || 'Agent saved successfully!', { id: toastId });
       setIsDirty(false);
@@ -919,7 +922,14 @@ const AgentEditPage = () => {
             )}
 
             <TabsContent value="channels" className="mt-0">
-              <AgentChannelsShell />
+              <AgentChannelsTab
+                agent={agent}
+                onOpenAgentConfiguration={
+                  visibleTabs.includes('configuration')
+                    ? () => setActiveTab('configuration')
+                    : undefined
+                }
+              />
             </TabsContent>
           </AgentDetailTabs>
         </div>

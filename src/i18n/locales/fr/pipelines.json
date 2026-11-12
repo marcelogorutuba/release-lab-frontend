@@ -361,6 +361,7 @@
     "anyValue": "Tout",
     "labelNamePlaceholder": "Nom de l'étiquette...",
     "selectStage": "Sélectionner une étape...",
+    "selectStatus": "Sélectionner un statut...",
     "selectAgent": "Sélectionner un agent...",
     "selectPipeline": "Sélectionner un pipeline...",
     "selectLabel": "Sélectionner une étiquette...",
@@ -635,6 +636,7 @@
       "editStage": "Modifier l'Étape",
       "deleteStage": "Supprimer l'Étape",
       "noConversations": "Aucune conversation dans cette étape",
+      "loadMore": "Charger plus",
       "noStages": "Aucune étape trouvée pour ce pipeline",
       "totalValue": "{{value}} €"
     },
@@ -701,6 +703,17 @@
     "tasks": {
       "pending": "en attente",
       "overdue": "en retard"
+    },
+    "loadState": {
+      "forbidden": {
+        "title": "Pas d'accès à ce pipeline",
+        "description": "Ce pipeline est privé ou vous n'avez pas l'autorisation de le voir. Demandez l'accès à son créateur ou à un administrateur du compte."
+      },
+      "notFound": {
+        "title": "Pipeline introuvable",
+        "description": "Ce pipeline n'existe plus ou le lien est incorrect."
+      },
+      "backToPipelines": "Retour aux pipelines"
     }
   },
   "tasks": {

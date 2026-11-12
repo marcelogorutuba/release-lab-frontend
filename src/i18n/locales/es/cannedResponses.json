@@ -63,7 +63,7 @@
       },
       "content": {
         "label": "Contenido",
-        "placeholder": "Digite el contenido de la respuesta rápida...",
+        "placeholder": "Ingrese el contenido de la respuesta rápida...",
         "hint": "Contenido de la respuesta que será enviada automáticamente."
       }
     },
@@ -81,6 +81,7 @@
       "shortCodeRequired": "El código es obligatorio",
       "shortCodeMinLength": "El código debe tener al menos 2 caracteres",
       "shortCodeInvalid": "El código debe contener solo letras, números, guiones bajos y guiones",
+      "shortCodeTaken": "Ya existe una respuesta rápida con ese código",
       "contentRequired": "El contenido es obligatorio",
       "contentMinLength": "El contenido debe tener al menos 10 caracteres"
     }
@@ -94,7 +95,13 @@
     "deleteSuccess": "Respuesta rápida eliminada con éxito",
     "deleteError": "Error al eliminar respuesta rápida",
     "bulkDeleteSuccess": "{{count}} respuesta(s) automática(s) eliminada(s) con éxito",
-    "bulkDeleteError": "Error al eliminar respuestas automáticas"
+    "bulkDeleteError": "Error al eliminar respuestas automáticas",
+    "permissionDenied": {
+      "read": "No tiene permiso para visualizar respuestas rápidas",
+      "create": "No tiene permiso para crear respuestas rápidas",
+      "update": "No tiene permiso para editar respuestas rápidas",
+      "delete": "No tiene permiso para eliminar respuestas rápidas"
+    }
   },
   "dialog": {
     "delete": {

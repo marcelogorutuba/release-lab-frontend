@@ -1,4 +1,5 @@
 {
+  "templateButtonUrlParam": "Botão {{button}} · link ({{n}})",
   "page": {
     "title": "Automações",
     "subtitle": "{{count}} regras de automação",
@@ -72,6 +73,7 @@
         "label": "Ações",
         "addRow": "Adicionar ação",
         "empty": "Adicione ao menos uma ação.",
+        "noConversationNotice": "Se o card não tiver uma conversa, estas ações não serão executadas: {{actions}}. Nos cards criados a partir de uma conversa, elas são executadas normalmente.",
         "send_message": "Enviar mensagem",
         "send_canned_response": "Enviar resposta pronta",
         "send_template": "Enviar template",
@@ -100,7 +102,8 @@
         "from": "De",
         "to": "Para",
         "remove": "Remover condição",
-        "noValueNeeded": "Nenhum valor necessário"
+        "noValueNeeded": "Nenhum valor necessário",
+        "noOptions": "Nenhuma opção disponível"
       },
       "boolean": {
         "true": "Sim",
@@ -163,6 +166,12 @@
           "equal_to": "Tem esta etiqueta",
           "not_equal_to": "Não tem esta etiqueta",
           "attribute_changed": "Etiqueta mudou"
+        },
+        "company": {
+          "equal_to": "Está vinculado a esta empresa",
+          "not_equal_to": "Não está vinculado a esta empresa",
+          "is_present": "Tem alguma empresa",
+          "is_not_present": "Não tem empresa"
         }
       },
       "attributes": {

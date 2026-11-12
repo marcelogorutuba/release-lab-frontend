@@ -13,11 +13,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- N/A
+- **CRM-817 — campaigns go through the CRM.** `campaignsService` calls `/api/v1/campaigns*` on the CRM API, which proxies to evo-flow with the account and the RBAC gate, like journeys and segments. The build no longer reads `VITE_EVOFLOW_API_URL`, so deployments can drop it. ⚠️ Needs the `evo-ai-crm-community` release that serves `/api/v1/campaigns`: against an older CRM the campaigns screen gets 404.
+
+### Removed
+
+- **CRM-823 — the direct evo-flow client is gone.** `src/services/core/apiEvoFlow.ts` had no callers left since CRM-817: segments, journeys and campaigns all go through the CRM API. Builds that import this repo and still rewrite a service onto that file must drop the rewrite first, or they fail with `Could not load .../services/core/apiEvoFlow`.
+- **CRM-579 — resíduos da menção em conversa.** O recurso foi aposentado no backend (`evo-ai-crm-community`): nunca teve produtor, e nenhuma tela deste repo jamais emitiu a marcação `mention://`. Saem os três resíduos que sobravam aqui: o tipo `conversation_mention` da lista que decide o alerta sonoro de conversa atribuída (`NotificationsContext`), o rótulo do toggle no Perfil e o valor `'mention'` do parâmetro `conversation_type` de `ConversationListParams` — que o backend nunca suportou e que nenhuma chamada deste repo preenchia. Mais as 18 chaves de i18n (`layout.json` e `profile.json` nos 6 idiomas). ⚠️ **Ordem de merge: o backend primeiro.** O toggle *"Mencionado em conversa"* some sozinho quando a remoção do backend subir, porque a lista de toggles é filtrada por `available_types`, que o front deriva de `all_email_flags`/`all_push_flags` e o `NotificationSettingSerializer` deriva de `Notification::NOTIFICATION_TYPES`. Se este PR entrar **antes**, a chave continua vindo do backend, o toggle continua sendo desenhado e o rótulo — que acabou de sair daqui — cai no fallback `labels[key] ?? key`: a tela mostra o identificador cru `conversation_mention` até a outra metade subir. Nada quebra, mas há texto feio na janela entre os dois merges.
 
 ### Fixed
 
-- N/A
+- **CRM-824 — campaign actions follow the keys the CRM checks.** Each campaign action shows only with its own key: execute, resume, pause, stop and duplicate (`campaigns.<action>`). Bulk pause, resume, duplicate and delete need `campaigns.bulk_action` plus the key of the action, instead of `campaigns.update`/`create`. Before, a custom role saw buttons that the CRM answered with 403. The account owner, who has every key, sees the same screen as before.
 
 ## [v1.0.0-rc6] - 2026-07-04
 

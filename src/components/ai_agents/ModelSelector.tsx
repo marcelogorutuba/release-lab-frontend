@@ -48,12 +48,15 @@ export const availableModels = [
   { value: 'together_ai/deepseek-ai/DeepSeek-V4-Flash-0731', label: 'DeepSeek V4 Flash (Together)', provider: 'together_ai' },
   { value: 'together_ai/meta-llama/Llama-3.3-70B-Instruct-Turbo', label: 'Llama 3.3 70B Instruct Turbo', provider: 'together_ai' },
   { value: 'together_ai/Qwen/Qwen3.5-9B', label: 'Qwen 3.5 9B', provider: 'together_ai' },
-  // Sonar Chat Completions is supported only until 2026-09-27; past that these ids need
-  // a new integration, not new values.
-  { value: 'perplexity/sonar-pro', label: 'Sonar Pro', provider: 'perplexity' },
-  { value: 'perplexity/sonar', label: 'Sonar', provider: 'perplexity' },
-  { value: 'perplexity/sonar-reasoning-pro', label: 'Sonar Reasoning Pro', provider: 'perplexity' },
-  { value: 'perplexity/sonar-deep-research', label: 'Sonar Deep Research', provider: 'perplexity' },
+  // Reintroduced on the Responses API; the doubled vendor segment is what routes here
+  // instead of the retired Chat Completions ids (see _route_perplexity_through_responses
+  // in the processor's llm_model_routing.py). sonar-reasoning-pro has no successor in
+  // the new catalogue.
+  { value: 'perplexity/perplexity/sonar', label: 'Sonar', provider: 'perplexity' },
+  { value: 'perplexity/preset/pro-search', label: 'Pro Search', provider: 'perplexity' },
+  { value: 'perplexity/preset/deep-research', label: 'Deep Research', provider: 'perplexity' },
+  { value: 'perplexity/preset/advanced-deep-research', label: 'Advanced Deep Research', provider: 'perplexity' },
+  { value: 'perplexity/preset/fast-search', label: 'Fast Search', provider: 'perplexity' },
   // `global.` where Bedrock offers global routing, `us.` only where it does not, so the
   // picker never pins data residency the deployment did not ask for. Sonnet 4.5 EOL from
   // 2026-09-29.
@@ -65,10 +68,11 @@ export const availableModels = [
   { value: 'bedrock/mistral.mistral-7b-instruct-v0:2', label: 'Mistral 7B (Bedrock)', provider: 'bedrock' },
   { value: 'bedrock/amazon.nova-micro-v1:0', label: 'Amazon Nova Micro (Bedrock)', provider: 'bedrock' },
   // Vertex has no listing endpoint and no rolling alias, so these are pinned by hand.
-  // Gemini 2.5 retires 2026-10-16; Pro stays on it because 3.1 Pro is still preview.
+  // No Pro until Vertex ships a GA one: a preview id carries no published retirement date
+  // (3.1 Pro still preview as of 2026-10-08).
+  { value: 'vertex_ai/gemini-3.8-flash', label: 'Gemini 3.8 Flash (Vertex)', provider: 'vertex_ai' },
   { value: 'vertex_ai/gemini-3.7-flash', label: 'Gemini 3.7 Flash (Vertex)', provider: 'vertex_ai' },
   { value: 'vertex_ai/gemini-3.1-flash-lite', label: 'Gemini 3.1 Flash-Lite (Vertex)', provider: 'vertex_ai' },
-  { value: 'vertex_ai/gemini-2.5-pro', label: 'Gemini 2.5 Pro (Vertex)', provider: 'vertex_ai' },
 ];
 
 export interface ModelSelectorProps {

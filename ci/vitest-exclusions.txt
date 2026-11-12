@@ -1,0 +1,206 @@
+# Vitest specs that do NOT run in CI, each with an owner and a reason. Review this file at every
+# release (owner: Danilo). Read by ci/check-vitest-list.mjs: a line without an owner or a reason,
+# a file that no longer exists, or a spec that is also in ci/vitest-list.txt fails the check.
+#
+# Format: <path> | <owner> | <reason>
+#
+# Measured on 2026-11-12 with the whole suite on ubuntu-latest: of these 196 specs, 185 pass
+# and 11 fail (51 tests). To bring a spec into CI, move its line to ci/vitest-list.txt with a
+# comment saying what it guards; a failing one has to be fixed first.
+
+src/components/ApiKeysModal.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/agents/AgentsFilterPanel.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/agents/AgentsList.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/agents/AgentsTabsLayout.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/agents/ExternalAgentConfig.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/agents/configuration/AgentToggle.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/agents/configuration/ContactEditModal.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/agents/configuration/PipelineRulesModal.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/agents/configuration/TransferRulesModal.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/ai_agents/CustomMCPServersSection.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/ai_agents/Dialogs/CustomMCPDialog.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/ai_agents/Dialogs/CustomToolsSelectionDialog.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/ai_agents/Dialogs/MCPConfigDialog.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/ai_agents/__tests__/ModelSelector.bedrockLifecycle.spec.ts | Danilo | fails (2 tests): reaches the network for the Bedrock lifecycle, kept out on purpose
+src/components/ai_agents/shared/AdvancedJsonCollapse.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/ai_agents/shared/AdvancedJsonEditor.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/ai_agents/shared/KeyValueEditor.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/ai_agents/shared/TagInput.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/ai_agents/shared/TestRequestButton.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/ai_agents/shared/VaultCredentialRefs.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/ai_agents/shared/vaultRetirement.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/automation/ActionRow.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/automation/CustomAttributeValueInput.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/automation/EventSelector.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/base/BaseFilterRow.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/base/BaseNodePanel.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/channels/ProviderGrid.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/channels/settings/BusinessHoursForm.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite (4 skipped tests)
+src/components/channels/settings/GlobalTemplateSelect.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/channels/settings/GreetingSettingsForm.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/channels/settings/WebWidgetAdvancedForm.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/chat/audio/AudioRecorder.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/chat/chat-header/ChatHeader.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/chat/chat-sidebar/ChatSidebar.spec.tsx | Danilo | fails (7 tests): getPipelinesByContact spy never called
+src/components/chat/chat-sidebar/conversationSegmentsHelpers.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/chat/contact-sidebar/ContactSidebar.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/chat/contact/ContactAvatar.spec.tsx | Danilo | fails (1 test): initials fallback text not rendered
+src/components/chat/conversation/ConversationActionsDropdown.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/chat/message-input/buildCannedResponseMessage.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/chat/message-template/TemplatesPicker.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/chat/message-template/templateStatus.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/chat/messages/MessageBubble.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/chat/messages/MessageFile.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/chat/messages/MessageStatus.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/chat/messages/ReplyPreview.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/chat/rich-text-editor/RichTextEditor.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/chat/search/GlobalSearchPanel.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/contacts/StartConversationModal.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/contacts/__tests__/ContactEventsErrorBoundary.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/contacts/__tests__/ContactEventsTab.lazyMount.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/contacts/__tests__/ContactEventsTab.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/contacts/__tests__/ContactEventsTimeline.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/customMcpServers/CustomMCPServerWizardModal.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/customMcpServers/wizard/Step2_Connection.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/customTools/CustomToolTestResultDialog.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/customTools/CustomToolsTable.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/events-manifest-consumers.cross-screen.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/integrations/KnowledgeNexusConfigDialog.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/integrations/MCPCard.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/integrations/providers/openai/OpenAIModal.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/journey/JourneyModal.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/journey/_ui/FlowCategoryBadge/FlowCategoryBadge.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/journey/_ui/FlowFeedbackBanner/FlowFeedbackBanner.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/journey/_ui/tokens.contrast.spec.ts | Danilo | does not load: imports colorjs.io, which is not in package.json
+src/components/journey/_ui/tokens.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/journey/environment-manager/VariableTextarea.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/journey/nodes/actions/assign-to-pipeline/AssignToPipelinePanel.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/journey/nodes/actions/conditional/ConditionalNode.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/journey/nodes/actions/conditional/ConditionalPanel.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/journey/nodes/actions/create-pipeline-task/CreatePipelineTaskPanel.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/journey/nodes/actions/move-to-pipeline-stage/MoveToPipelineStagePanel.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/journey/nodes/actions/send-canned-response/SendCannedResponsePanel.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/journey/nodes/actions/send-message/SendMessagePanel.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/journey/nodes/actions/send-webhook/components/WebhookBodyConfig.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/journey/nodes/actions/send-webhook/components/webhookBody.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/journey/nodes/actions/update-custom-attribute/UpdateCustomAttributePanel.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/journey/nodes/trigger/JourneyTriggerNode.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/journey/nodes/trigger/JourneyTriggerPanel.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/journey/nodes/trigger/components/EventAdvancedConfig.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/journey/nodes/trigger/components/EventConfiguration.both-contexts.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/journey/nodes/trigger/components/EventConfiguration.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/journey/nodes/trigger/components/PipelineStageChangedConfiguration.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/journey/shared/EventSelector/EventSelector.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/journey/shared/JourneyEditorHeader/JourneyEditorHeader.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/journey/shared/NodeConfigModal/NodeConfigModal.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/layout/MainLayout.spec.tsx | Danilo | fails (4 tests): no button named sidebar.closeSubmenu
+src/components/layout/components/MenuItem.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/layout/components/Sidebar.spec.tsx | Danilo | fails (7 tests): submenu flyout not in the document
+src/components/pipelines/PipelineItemCard.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/pipelines/ReorderStagesModal.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/pipelines/stageAutomationPayload.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/products/ProductModal.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/products/ProductsTable.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/segments/SegmentConditionEditor.label.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/segments/SegmentConditionEditor.performed.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/segments/canvas/segmentCanvas.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/shared/UnreadBadge.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/shared/profile/TwoFactorSetup.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/users/SetPasswordModal.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/widget/EmailCollectInput.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/components/widget/MessageList.spec.tsx | Danilo | fails (6 tests): date-fns/locale mock has no enUS export
+src/config/permissionDomains.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/constants/aiProviders.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/contexts/GlobalConfigContext.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/contexts/NotificationsContext.reducer.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/hooks/__tests__/useContactEvents.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/hooks/chat/__tests__/opusRecorder.spec.ts | Danilo | fails (10 tests): vite.config.ts no longer declares OPUS_RECORDER_DIR
+src/hooks/chat/__tests__/useConversationHandlers.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/hooks/chat/__tests__/useFilterHandlers.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/hooks/chat/useAudioRecorder.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/hooks/rbac/usePermissionGatedLoad.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/hooks/useContactPiiMasking.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/hooks/useFacebookSdk.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/hooks/useWidgetConfig.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/i18n/locales/contacts-parity.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/i18n/locales/retired-keys.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/lib/events-manifest/event-properties-bridge.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/lib/events-manifest/legacy.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/lib/recaptcha.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/lib/relativeTime.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/lib/useRelativeTime.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/pages/Admin/Settings/ChannelConfig.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/pages/Admin/Settings/FrontendServicesSection.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/pages/Admin/Settings/InboundEmailConfig.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/pages/Admin/Settings/IntegrationsConfig.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/pages/Admin/Settings/OpenAIConfig.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/pages/Admin/Settings/SocialLoginConfig.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/pages/Admin/Settings/StorageConfig.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/pages/Customer/Agents/Agent/components/AgentDetailTabs.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/pages/Customer/Agents/Agent/components/AgentSummaryPanel.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/pages/Customer/Agents/Agent/components/AgentToolsAccordion.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/pages/Customer/Agents/Agent/sections/ConfigurationSection/ConfigurationSection.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/pages/Customer/Agents/Agent/sections/MCPServersSection.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/pages/Customer/Agents/Agent/sections/TransferRules.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/pages/Customer/Agents/Agent/wizard/Step5_Instructions.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/pages/Customer/Agents/Agents.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/pages/Customer/Automation/registries/actionRegistry.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/pages/Customer/Automation/registries/conditionSchema.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/pages/Customer/Channels/NewChannel/NewChannel.spec.tsx | Danilo | fails (7 tests): react-router-dom mock has no useLocation export
+src/pages/Customer/Channels/NewChannel/NewChannelModal.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/pages/Customer/Chat/__tests__/Chat.spec.tsx | Danilo | fails (4 tests): onMarkAsResolved prop is not a function
+src/pages/Customer/Journey/journey-node-manifest.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/pages/Customer/Journey/journeyFlowTriggers.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/pages/Customer/Pipelines/Pipelines.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/pages/Customer/Settings/CrmForms/CrmForms.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/pages/Customer/Settings/MessageTemplates/__tests__/MessageTemplates.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/pages/Customer/Settings/Products/ProductsImport.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/pages/Customer/Settings/Products/productErrors.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/pages/Customer/Settings/Templates/__tests__/Templates.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/pages/Customer/Settings/Users/Users.setPassword.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/pages/Setup/OnboardingPage.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/pages/list-screens-permission-gate.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/plugin-host/__tests__/plugin-host.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/routes/PermissionRoute.spec.tsx | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/routes/inboxes-namespace.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/services/agents/agentService.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/services/agents/aiCredentialMigrationService.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/services/auth/authService.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/services/channels/__tests__/messageTemplatesService.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/services/channels/inboxesService.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/services/chat/chatService.bulkResolve.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/services/chat/searchService.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/services/chat/websocket/BaseActionCableConnector.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/services/contacts/__tests__/contactEventsService.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/services/core/websocket/actionCableService.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/services/dashboard/customerDashboardService.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/services/journeys/journeyService.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/services/messageTemplates/__tests__/globalMessageTemplatesService.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/services/rbac/rbacService.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/services/widget/widgetService.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/store/authStore.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/store/flowEditor/idbSnapshot.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/store/flowEditor/lastSavedMark.spec.ts | Danilo | fails (3 tests): persisted mark reads back as null
+src/store/flowEditor/useFlowEditorStore.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/store/unansweredConversationsStore.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/types/core/filters.contacts.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/utils/agentUtils.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/utils/appliedFilterChips.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/utils/assetUrl.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/utils/channelUtils.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/utils/chat/aiAssistanceMessage.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/utils/chat/avatarHelpers.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/utils/chat/contactTimestamp.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/utils/chat/conversationMatch.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/utils/chat/pipelineUtils.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/utils/clarityUtils.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/utils/contact/formatContactPhone.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/utils/contact/maskContactPii.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/utils/csv/parseCsv.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/utils/journeyFlowValidation.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/utils/journeyValidators/nodeValidators.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/utils/journeyValidators/triggerActionContext.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/utils/pipelineDeleteError.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/utils/products/bulkImport.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/utils/products/formData.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite
+src/utils/stripHtml.spec.ts | Danilo | passes; outside the CI list because of the cost of the whole suite

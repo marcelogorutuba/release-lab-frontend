@@ -19,10 +19,13 @@ import EmptyState from '@/components/base/EmptyState';
 import { maskKey } from '@/constants/aiProviders';
 import {
   createIntegrationCredential,
+  deleteConflictConsumers,
+  deleteConflictHolders,
   deleteIntegrationCredential,
   listCustomMcpServers,
   listCustomTools,
   listIntegrationCredentials,
+  parseHolders,
   updateIntegrationCredential,
 } from '@/services/agents';
 import agentIntegrationsService from '@/services/agents/agentIntegrationsService';
@@ -32,6 +35,7 @@ import type {
   ApiKeyScope,
   IntegrationCredential,
   IntegrationCredentialCreate,
+  IntegrationCredentialHolder,
   IntegrationCredentialUpdate,
 } from '@/types/agents';
 
@@ -71,9 +75,15 @@ interface ConsumerInUse {
   name: string;
   /** Client-side join mode: resolved to names against the loaded list. */
   credentialIds?: string[];
-  /** Server mode (AC10): consumer names aggregated by the backend. */
-  consumerNames?: string[];
+  /** Server mode: consumers aggregated by the backend. */
+  consumers?: (IntegrationCredentialHolder | string)[];
 }
+
+// An empty list is not an answer either: `referenced_by` may still name someone.
+const usableHolders = (value: unknown) => {
+  const holders = parseHolders(value);
+  return holders && holders.length > 0 ? holders : null;
+};
 
 export default function IntegrationCredentials() {
   const { t } = useLanguage('integrationCredentials');
@@ -84,6 +94,9 @@ export default function IntegrationCredentials() {
   const [formOpen, setFormOpen] = useState(false);
   const [draft, setDraft] = useState<CredentialDraft>(EMPTY_DRAFT);
   const [credentialToDelete, setCredentialToDelete] = useState<IntegrationCredential | null>(null);
+  const [deleteConflict, setDeleteConflict] = useState<
+    (IntegrationCredentialHolder | string)[] | null
+  >(null);
   const [connectionToDisconnect, setConnectionToDisconnect] =
     useState<IntegrationCredential | null>(null);
   const [consumersInUse, setConsumersInUse] = useState<ConsumerInUse[]>([]);
@@ -194,13 +207,13 @@ export default function IntegrationCredentials() {
       if (list.some(credential => Array.isArray(credential.referenced_by))) {
         setConsumersInUse(
           list
-            .filter(credential => (credential.referenced_by?.length ?? 0) > 0)
             .map(credential => ({
               key: `credential-${credential.id}`,
               kind: 'credential' as const,
               name: credential.name,
-              consumerNames: credential.referenced_by ?? [],
-            })),
+              consumers: usableHolders(credential.holders) ?? credential.referenced_by ?? [],
+            }))
+            .filter(row => row.consumers.length > 0),
         );
       } else {
         loadConsumers();
@@ -317,6 +330,7 @@ export default function IntegrationCredentials() {
   // token is touched — and the provider-side grant is NOT revoked.
   const handleDisconnectConfirm = async () => {
     if (!connectionToDisconnect?.agent_id) {
+      toast.error(t('oauthSection.disconnectError'));
       return;
     }
 
@@ -344,17 +358,37 @@ export default function IntegrationCredentials() {
 
     try {
       setSaving(true);
+      setDeleteConflict(null);
       await deleteIntegrationCredential(credentialToDelete.id);
       toast.success(t('messages.deleteSuccess'));
       setCredentialToDelete(null);
       loadCredentials();
     } catch (error) {
       console.error('Error deleting integration credential:', error);
+
+      // The refusal names its holders, so the dialog stays open and says who
+      // they are; a generic toast on top would compete with that answer.
+      const consumers = deleteConflictHolders(error) ?? deleteConflictConsumers(error);
+      if (consumers) {
+        setDeleteConflict(consumers);
+        return;
+      }
+
       toast.error(t('messages.deleteError'));
     } finally {
       setSaving(false);
     }
   };
+
+  // A plain string comes from a server that does not send `holders` yet.
+  const consumerLabel = (consumer: IntegrationCredentialHolder | string) => {
+    if (typeof consumer === 'string') return consumer;
+    const label = t(`holders.${consumer.kind}`, { name: consumer.name });
+    return consumer.key ? `${label} [${consumer.key}]` : label;
+  };
+
+  const referencedBy: (IntegrationCredentialHolder | string)[] =
+    parseHolders(credentialToDelete?.holders) ?? credentialToDelete?.referenced_by ?? [];
 
   if (permissionsReady && !canRead) {
     return (
@@ -431,7 +465,10 @@ export default function IntegrationCredentials() {
                         variant="ghost"
                         size="sm"
                         aria-label={t('actions.delete')}
-                        onClick={() => setCredentialToDelete(credential)}
+                        onClick={() => {
+                          setDeleteConflict(null);
+                          setCredentialToDelete(credential);
+                        }}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -474,8 +511,8 @@ export default function IntegrationCredentials() {
               <span className="text-muted-foreground">{t(`inUse.kinds.${consumer.kind}`)}</span>
               <span className="font-medium">{consumer.name}</span>
               <span className="text-xs text-muted-foreground">
-                {consumer.consumerNames
-                  ? consumer.consumerNames.join(', ')
+                {consumer.consumers
+                  ? consumer.consumers.map(consumerLabel).join(', ')
                   : (consumer.credentialIds ?? [])
                       .map(id => credentials.find(credential => credential.id === id)?.name ?? id)
                       .join(', ')}
@@ -558,42 +595,65 @@ export default function IntegrationCredentials() {
                 </tr>
               </thead>
               <tbody>
-                {oauthConnections.map(connection => (
-                  <tr key={connection.id} className="border-t">
-                    <td className="p-3">
-                      <Badge variant="outline">{connection.provider}</Badge>
-                    </td>
-                    <td className="p-3">{connection.agent_name ?? connection.owner_ref}</td>
-                    <td className="p-3">
-                      <Badge
-                        variant={
-                          connection.connection_status === 'connected' ? 'default' : 'secondary'
-                        }
-                      >
-                        {t(`oauthSection.status.${connection.connection_status ?? 'connected'}`)}
-                      </Badge>
-                    </td>
-                    <td className="p-3">
-                      {connection.connection_expires_at
-                        ? parseOwnerTimestamp(connection.connection_expires_at).toLocaleString()
-                        : t('oauthSection.noExpiry')}
-                    </td>
-                    <td className="p-3">
-                      <div className="flex justify-end gap-2">
-                        {canDisconnect && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            aria-label={t('oauthSection.actions.disconnect')}
-                            onClick={() => setConnectionToDisconnect(connection)}
-                          >
-                            {t('oauthSection.actions.disconnect')}
-                          </Button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {oauthConnections.map(connection => {
+                  // The listing sync deactivates a row whose connection left the
+                  // owner store: nothing to disconnect, so delete is the way out.
+                  const orphaned = !connection.is_active;
+
+                  return (
+                    <tr key={connection.id} className="border-t">
+                      <td className="p-3">
+                        <Badge variant="outline">{connection.provider}</Badge>
+                      </td>
+                      <td className="p-3">{connection.agent_name ?? connection.owner_ref}</td>
+                      <td className="p-3">
+                        <Badge
+                          variant={
+                            connection.connection_status === 'connected' && !orphaned
+                              ? 'default'
+                              : 'secondary'
+                          }
+                        >
+                          {orphaned
+                            ? t('oauthSection.status.disconnected')
+                            : t(
+                                `oauthSection.status.${connection.connection_status ?? 'connected'}`,
+                              )}
+                        </Badge>
+                      </td>
+                      <td className="p-3">
+                        {connection.connection_expires_at
+                          ? parseOwnerTimestamp(connection.connection_expires_at).toLocaleString()
+                          : t('oauthSection.noExpiry')}
+                      </td>
+                      <td className="p-3">
+                        <div className="flex justify-end gap-2">
+                          {orphaned
+                            ? canDeleteInScope(connection.scope ?? 'account') && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  aria-label={t('actions.delete')}
+                                  onClick={() => setCredentialToDelete(connection)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )
+                            : canDisconnect && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  aria-label={t('oauthSection.actions.disconnect')}
+                                  onClick={() => setConnectionToDisconnect(connection)}
+                                >
+                                  {t('oauthSection.actions.disconnect')}
+                                </Button>
+                              )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -697,7 +757,12 @@ export default function IntegrationCredentials() {
 
       <Dialog
         open={Boolean(credentialToDelete)}
-        onOpenChange={open => !open && setCredentialToDelete(null)}
+        onOpenChange={open => {
+          if (!open) {
+            setCredentialToDelete(null);
+            setDeleteConflict(null);
+          }
+        }}
       >
         <DialogContent>
           <DialogHeader>
@@ -707,14 +772,35 @@ export default function IntegrationCredentials() {
             </DialogDescription>
           </DialogHeader>
 
-          {(credentialToDelete?.referenced_by?.length ?? 0) > 0 && (
-            <p role="alert" className="flex gap-2 text-sm text-amber-600">
-              <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
-              {t('deleteDialog.inUseWarning', {
-                count: credentialToDelete?.referenced_by?.length,
-                consumers: credentialToDelete?.referenced_by?.join(', '),
-              })}
-            </p>
+          {deleteConflict ? (
+            // The server just answered failing closed; `referenced_by` is a
+            // tolerant snapshot taken at listing time. Showing both would hand
+            // the reader two lists of who holds this and no way to choose.
+            <div
+              role="alert"
+              className="rounded border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive"
+            >
+              <p className="flex gap-2 font-medium">
+                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                {t('deleteDialog.conflict.title')}
+              </p>
+              <ul className="list-disc pl-10 mt-2 space-y-1">
+                {deleteConflict.map(consumerLabel).map((label, index) => (
+                  <li key={`${label}-${index}`}>{label}</li>
+                ))}
+              </ul>
+              <p className="pl-6 mt-2">{t('deleteDialog.conflict.help')}</p>
+            </div>
+          ) : (
+            referencedBy.length > 0 && (
+              <p role="alert" className="flex gap-2 text-sm text-amber-600">
+                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                {t('deleteDialog.inUseWarning', {
+                  count: referencedBy.length,
+                  consumers: referencedBy.map(consumerLabel).join(', '),
+                })}
+              </p>
+            )
           )}
 
           <DialogFooter>

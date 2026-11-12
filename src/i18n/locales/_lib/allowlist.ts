@@ -81,11 +81,15 @@ export const COMMON_ALLOWED = new Set<string>([
   'v{{version}}',
   // --- language autonyms (shown in their own language regardless of UI locale) ---
   'English', 'Español', 'Français', 'Italiano', 'Português', 'Português (BR)',
-  // --- EN file authored with Portuguese values (out-of-scope to fix EN) ---
-  'Nome', 'Valor', 'ou', 'Ver IDs',
 ]);
 
 export const PER_FILE_ALLOWED: Record<string, Set<string>> = {
+  'events.json': new Set([
+    // CRM-519: channel and payment-platform brand names in the trigger filter
+    // option labels.
+    'SMS (Twilio)', 'X (Twitter)',
+    'Virtu', 'Hotmart', 'Kiwify', 'Cakto',
+  ]),
   'adminSettings.json': new Set([
     'Frontend Runtime', 'Google OAuth', 'Relay (Exim / Postfix / Qmail)',
   ]),
@@ -106,14 +110,18 @@ export const PER_FILE_ALLOWED: Record<string, Set<string>> = {
     '🤖 Bot', 'WhatsApp Business', 'Twilio SMS', 'Inbox ID:', 'Account ID:',
     '📎 {{fileType}}',
   ]),
-  'campaigns.json': new Set(['Inbox - {{channel}}']),
+  'campaigns.json': new Set([
+    'Inbox - {{channel}}', 'Split', 'Template {{id}}', 'Templates:', '{{hours}}h',
+    // weekday initials that happen to collide between EN and pt-BR (Tue/Ter, Sat/Sáb)
+    'T', 'S',
+  ]),
   'contacts.json': new Set([
     'Twilio SMS', '+{{count}} pipeline', '+{{count}} pipelines',
     '{{days}}d {{hours}}h', '{{hours}}h {{minutes}}m', '{{minutes}}m {{seconds}}s',
     '{{seconds}}s',
   ]),
   'customMcpServers.json': new Set([
-    'Timeout: {{timeout}}s', 'api, search, database',
+    'api, search, database', '{{timeout}}s',
   ]),
   'customTools.json': new Set(['api, http, webhook']),
   'integrations.json': new Set([
@@ -164,8 +172,6 @@ export const PER_FILE_ALLOWED: Record<string, Set<string>> = {
     'WhatsApp Cloud', 'Evolution API', 'Evolution API V2', 'Evolution Go',
     'Evolution Go API', 'WhatsApp via Notificame', 'WhatsApp via Z-API',
     'WhatsApp via Twilio', 'Account SID', 'Auth Token',
-    // EN value authored in pt-BR at this key (out-of-scope to fix EN)
-    'Use o Facebook Embedded Signup para configurar automaticamente seu canal WhatsApp.',
   ]),
   // Unit suffix, same in pt-BR. Scoped here rather than shared: the value only
   // occurs in this file, and a global entry would excuse it catalog-wide.
@@ -178,3 +184,15 @@ export function allowedFor(file: string): Set<string> {
   if (!perFile) return COMMON_ALLOWED;
   return new Set([...COMMON_ALLOWED, ...perFile]);
 }
+
+/**
+ * en/es keys whose value is Portuguese on purpose, by key so a new leak with the same
+ * text is still caught: language names shown in their own language, and a city name.
+ */
+const LANGUAGE_NAME_KEYS = new Set(['language.portuguese', 'language.french']);
+export const PORTUGUESE_ALLOWED_KEYS: Record<string, Set<string>> = {
+  'auth.json': new Set(['language.selector.portuguese', 'language.selector.french']),
+  'onboarding.json': LANGUAGE_NAME_KEYS,
+  'setup.json': LANGUAGE_NAME_KEYS,
+  'contacts.json': new Set(['form.fields.city.placeholder']),
+};

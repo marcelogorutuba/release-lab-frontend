@@ -1,5 +1,6 @@
 import { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/hooks/useLanguage';
 
 export interface BaseStatsCardProps {
   /** Título do card */
@@ -64,8 +65,8 @@ const colorVariants = {
     text: 'text-indigo-600 dark:text-indigo-400',
   },
   gray: {
-    bg: 'bg-gray-100 dark:bg-gray-900/50',
-    text: 'text-gray-600 dark:text-gray-400',
+    bg: 'bg-muted',
+    text: 'text-muted-foreground',
   },
 };
 
@@ -84,6 +85,8 @@ export default function BaseStatsCard({
   onClick,
   extra,
 }: BaseStatsCardProps) {
+  const { currentLanguage } = useLanguage();
+
   // Não renderizar se show for false
   if (!show) return null;
 
@@ -93,7 +96,7 @@ export default function BaseStatsCard({
 
     switch (valueFormat) {
       case 'currency':
-        return new Intl.NumberFormat('pt-BR', {
+        return new Intl.NumberFormat(currentLanguage, {
           style: 'currency',
           currency: currency,
           minimumFractionDigits: 2,
@@ -104,7 +107,7 @@ export default function BaseStatsCard({
         return `${val}%`;
       
       case 'number':
-        return new Intl.NumberFormat('pt-BR').format(val);
+        return new Intl.NumberFormat(currentLanguage).format(val);
       
       case 'custom':
         return val.toString() + (suffix || '');

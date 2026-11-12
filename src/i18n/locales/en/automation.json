@@ -1,4 +1,5 @@
 {
+  "templateButtonUrlParam": "Button {{button}} · link ({{n}})",
   "page": {
     "title": "Automations",
     "subtitle": "{{count}} automation rules",
@@ -72,6 +73,7 @@
         "label": "Actions",
         "addRow": "Add action",
         "empty": "Add at least one action.",
+        "noConversationNotice": "If the card has no conversation, these actions will not run: {{actions}}. On cards created from a conversation, they run as usual.",
         "send_message": "Send message",
         "send_canned_response": "Send canned response",
         "send_template": "Send template",
@@ -100,7 +102,8 @@
         "from": "From",
         "to": "To",
         "remove": "Remove condition",
-        "noValueNeeded": "No value needed"
+        "noValueNeeded": "No value needed",
+        "noOptions": "No options available"
       },
       "boolean": {
         "true": "Yes",
@@ -163,6 +166,12 @@
           "equal_to": "Has this label",
           "not_equal_to": "Does not have this label",
           "attribute_changed": "Label changed"
+        },
+        "company": {
+          "equal_to": "Is linked to this company",
+          "not_equal_to": "Is not linked to this company",
+          "is_present": "Has a company",
+          "is_not_present": "Has no company"
         }
       },
       "attributes": {

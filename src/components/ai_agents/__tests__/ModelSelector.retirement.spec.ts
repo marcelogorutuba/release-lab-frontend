@@ -9,7 +9,14 @@ import { availableModels } from '@/components/ai_agents/ModelSelector';
  * watching a date runs on every PR — the network specs are out of CI.
  *
  * Serving an id until its date is the posture, not an oversight: pulling it early costs
- * the user a model that still answers. CRM-462 wrote that down for the perplexity axis.
+ * the user a model that still answers. The exception is an id that already fails before
+ * its date — there is no working model left to cost anyone, and the perplexity axis was
+ * emptied ahead of schedule on exactly that ground once (its Chat Completions ids). The
+ * axis is pinned again on a different route (Responses API); the same rule applies the
+ * moment any of those ids gets a published end-of-service date.
+ *
+ * A second exception: an id whose date falls before the next release can reach production
+ * leaves the list early. Saved agents keep the value (see ModelSelector.retiredValue.spec.tsx).
  */
 
 // End-of-service dates, as the provider published them. A row is added when a pin gains a
@@ -17,17 +24,11 @@ import { availableModels } from '@/components/ai_agents/ModelSelector';
 //
 // Bedrock is absent on purpose: its `Model EOL date` is a floor ("No sooner than …"), not
 // an expiry, so it is no deadline to assert. That axis reads the live lifecycle instead,
-// in ModelSelector.bedrockLifecycle.spec.ts.
+// in ModelSelector.bedrockLifecycle.spec.ts. Vertex's "<date> or later" (3.1 Flash-Lite)
+// is the same kind of floor and gets no row either.
 const RETIRES_ON: Record<string, string> = {
-  // Perplexity supports Sonar Chat Completions until this date; CRM-462 owns the move to
-  // the Agent API, and this is its "or the axis is emptied" half.
-  'perplexity/sonar': '2026-09-27',
-  'perplexity/sonar-pro': '2026-09-27',
-  'perplexity/sonar-reasoning-pro': '2026-09-27',
-  'perplexity/sonar-deep-research': '2026-09-27',
-  // Vertex retires the whole Gemini 2.5 family. Pro has no GA successor to pin yet
-  // (3.1 Pro is still Preview), which is exactly why the date needs a guard.
-  'vertex_ai/gemini-2.5-pro': '2026-10-16',
+  // Replaced by 3.8 Flash, already on the list.
+  'vertex_ai/gemini-3.7-flash': '2027-01-28',
 };
 
 // A date is reached the moment ANY timezone is on it, which UTC is the last to be — up to

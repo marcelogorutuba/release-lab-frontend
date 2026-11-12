@@ -1,4 +1,5 @@
 {
+  "templateButtonUrlParam": "Button {{button}} · link ({{n}})",
   "title": "Contacts",
   "card": {
     "phone": "Phone",
@@ -308,6 +309,12 @@
     "deleteError": "Error deleting contact",
     "bulkDeleteSuccess": "{{count}} contact(s) deleted successfully",
     "bulkDeleteError": "Error deleting contacts",
+    "bulkLabelsAdded": "Labels added to {{count}} contact(s)",
+    "bulkLabelsRemoved": "Labels removed from {{count}} contact(s)",
+    "bulkLabelsError": "Error updating labels",
+    "bulkAttributeSuccess": "Attribute updated on {{count}} contact(s)",
+    "bulkAttributeError": "Error updating the attribute",
+    "bulkPartial": "{{count}} contact(s) updated; {{failed}} could not be changed",
     "mergeSuccess": "Contacts merged successfully",
     "mergeError": "Error merging contacts",
     "importSuccess": "Contacts imported successfully",
@@ -336,6 +343,27 @@
       "confirm": "Delete All",
       "cancel": "Cancel",
       "deleting": "Deleting..."
+    },
+    "bulkLabels": {
+      "title": "Labels of the selected contacts",
+      "description": "Choose the labels to add to or remove from {{count}} contact(s).",
+      "add": "Add",
+      "remove": "Remove",
+      "empty": "No labels registered yet.",
+      "cancel": "Cancel",
+      "apply": "Apply",
+      "applying": "Applying..."
+    },
+    "bulkAttribute": {
+      "title": "Attribute of the selected contacts",
+      "description": "The value is written to {{count}} contact(s); other attributes stay as they are.",
+      "key": "Attribute",
+      "keyPlaceholder": "e.g. plan, sector, role",
+      "value": "Value",
+      "valuePlaceholder": "Attribute value",
+      "cancel": "Cancel",
+      "apply": "Apply",
+      "applying": "Applying..."
     },
     "mergeContacts": {
       "title": "Merge Contacts",
@@ -487,6 +515,8 @@
     "export": "Export",
     "filters": "Filters",
     "bulkDelete": "Delete Selected",
+    "bulkLabels": "Labels",
+    "bulkAttribute": "Attribute",
     "mergeContacts": "Merge Contacts",
     "clearSelection": "Clear Selection",
     "selected": "{{count}} selected",
@@ -555,7 +585,6 @@
     "searchPlaceholder": "Search scheduled actions...",
     "bulkCancel": "Cancel Selected",
     "emptyDescription": "Create a new scheduled action to get started",
-    "pagination": "Page {{page}} of {{totalPages}} ({{total}} total)",
     "messages": {
       "noChannelsConfigured": "No messaging channels configured. Please configure a WhatsApp, SMS, Email, or Telegram channel first in the Channels settings."
     },
@@ -724,6 +753,11 @@
       "traits": "Event traits",
       "noData": "No additional data for this event",
       "justNow": "just now",
+      "scheduledAction": {
+        "summary": "{{action}} · due {{scheduledFor}}",
+        "reason": "Reason: {{reason}}",
+        "willRetry": "Another attempt is scheduled"
+      },
       "enriched": {
         "campaign": "Campaign: {{name}}",
         "channel": "Channel: {{label}}",

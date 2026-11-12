@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '@/hooks/useLanguage';
+import { toDateTimeLocalValue } from '@/utils/time/dateTimeLocal';
 import {
   Dialog,
   DialogContent,
@@ -38,7 +39,7 @@ export default function EditTaskModal({
   loading = false,
   availableUsers = [],
 }: EditTaskModalProps) {
-  const { t } = useLanguage('pipelines');
+  const { t, currentLanguage } = useLanguage('pipelines');
 
   const [formData, setFormData] = useState<UpdateTaskData>({
     title: '',
@@ -54,24 +55,12 @@ export default function EditTaskModal({
   // Initialize form when task changes
   useEffect(() => {
     if (open && task) {
-      // Format due_date for datetime-local input
-      let formattedDueDate = '';
-      if (task.due_date) {
-        try {
-          const date = new Date(task.due_date);
-          // Format to YYYY-MM-DDTHH:mm
-          formattedDueDate = date.toISOString().slice(0, 16);
-        } catch (e) {
-          console.error('Error formatting due date:', e);
-        }
-      }
-
       setFormData({
         title: task.title || '',
         description: task.description || '',
         task_type: task.task_type,
         priority: task.priority,
-        due_date: formattedDueDate,
+        due_date: toDateTimeLocalValue(task.due_date),
         assigned_to_id: task.assigned_to_id || '',
       });
       setErrors({});
@@ -122,8 +111,8 @@ export default function EditTaskModal({
       submitData.priority = formData.priority;
     }
 
-    if (formData.due_date !== task.due_date) {
-      submitData.due_date = formData.due_date || undefined;
+    if (formData.due_date !== toDateTimeLocalValue(task.due_date)) {
+      submitData.due_date = formData.due_date ? new Date(formData.due_date).toISOString() : undefined;
     }
 
     // Allow removing assignment by sending empty string
@@ -232,7 +221,7 @@ export default function EditTaskModal({
             />
             {task?.parent_task?.due_date && (
               <p className="text-xs text-muted-foreground">
-                {t('tasks.form.exactDueDate')}: {new Date(task.parent_task.due_date).toLocaleString('pt-BR')}
+                {t('tasks.form.exactDueDate')}: {new Date(task.parent_task.due_date).toLocaleString(currentLanguage)}
               </p>
             )}
             {errors.due_date && (

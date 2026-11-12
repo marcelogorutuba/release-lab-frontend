@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@evoapi/design-system';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -13,7 +13,7 @@ import MCPServersHeader from '@/components/mcpServers/MCPServersHeader';
 import MCPServersTable from '@/components/mcpServers/MCPServersTable';
 import MCPServersPagination from '@/components/mcpServers/MCPServersPagination';
 import MCPServerDetails from '@/components/mcpServers/MCPServerDetails';
-import { listMCPServers } from '@/services/agents/mcpServerService';
+import { listMCPServersPage } from '@/services/agents/mcpServerService';
 import { DEFAULT_PAGE_SIZE } from '@/constants/pagination';
 
 const INITIAL_STATE: MCPServersState = {
@@ -45,6 +45,20 @@ export default function MCPServers() {
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [detailsServer, setDetailsServer] = useState<MCPServer | null>(null);
 
+  // Typing fires one request after it settles, not one per keystroke.
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current);
+      }
+    },
+    [],
+  );
+
+  // Only the latest list request may commit: page clicks can overlap and answer out of order.
+  const latestLoadRef = useRef(0);
+
   // Load servers
   const loadServers = useCallback(
     async (params?: Partial<MCPServersListParams>) => {
@@ -52,7 +66,13 @@ export default function MCPServers() {
         toast.error(t('errors.permissionDenied'));
         return;
       }
-      setState(prev => ({ ...prev, loading: { ...prev.loading, list: true } }));
+      const loadId = ++latestLoadRef.current;
+      // The selection only names rows of the page on screen.
+      setState(prev => ({
+        ...prev,
+        selectedServerIds: [],
+        loading: { ...prev.loading, list: true },
+      }));
 
       try {
         const requestParams: MCPServersListParams = {
@@ -61,22 +81,25 @@ export default function MCPServers() {
           ...params,
         };
 
-        const response = await listMCPServers(requestParams);
+        const { servers, total } = await listMCPServersPage(requestParams);
+        if (loadId !== latestLoadRef.current) return;
+        const pageSize = requestParams.limit || DEFAULT_PAGE_SIZE;
 
         setState(prev => ({
           ...prev,
-          servers: response,
+          servers,
           meta: {
             pagination: {
-              page: Math.floor((requestParams.skip || 0) / (requestParams.limit || DEFAULT_PAGE_SIZE)) + 1,
-              page_size: requestParams.limit || DEFAULT_PAGE_SIZE,
-              total: response.length,
-              total_pages: Math.ceil(response.length / (requestParams.limit || DEFAULT_PAGE_SIZE)),
+              page: Math.floor((requestParams.skip || 0) / pageSize) + 1,
+              page_size: pageSize,
+              total,
+              total_pages: Math.ceil(total / pageSize),
             },
           },
           loading: { ...prev.loading, list: false },
         }));
       } catch (error) {
+        if (loadId !== latestLoadRef.current) return;
         console.error('Error loading MCP servers:', error);
         toast.error(t('errors.loadError'));
         setState(prev => ({ ...prev, loading: { ...prev.loading, list: false } }));
@@ -91,15 +114,25 @@ export default function MCPServers() {
     onDenied: () => toast.error(t('errors.permissionDenied')),
   });
 
+  // The size every load asks for. The pager fires `onPageChange(1)` right after a size
+  // change, before the new size reaches state, so state cannot be the source.
+  const pageSizeRef = useRef(INITIAL_STATE.meta.pagination.page_size);
+  // With no load pending, back to the size on screen: a failed size change must not make
+  // the next request ask for a size the footer never showed.
+  useEffect(() => {
+    if (!state.loading.list) pageSizeRef.current = state.meta.pagination.page_size;
+  }, [state.loading.list, state.meta.pagination.page_size]);
+
   // Handlers
   const handleSearchChange = (query: string) => {
-    setState(prev => ({
-      ...prev,
-      searchQuery: query,
-      meta: { ...prev.meta, pagination: { ...prev.meta.pagination, page: 1 } },
-    }));
+    setState(prev => ({ ...prev, searchQuery: query }));
 
-    loadServers({ skip: 0, search: query });
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+    }
+    searchDebounceRef.current = setTimeout(() => {
+      loadServers({ skip: 0, limit: pageSizeRef.current, search: query });
+    }, 500);
   };
 
   const handleServerClick = (server: MCPServer) => {
@@ -107,20 +140,16 @@ export default function MCPServers() {
     setDetailsModalOpen(true);
   };
 
-
-
+  // Page and size reach state only with the rows `loadServers` commits, so a failed request
+  // leaves the footer describing the rows still on screen.
   const handlePageChange = (page: number) => {
-    const skip = (page - 1) * state.meta.pagination.page_size;
-    setState(prev => ({ ...prev, meta: { ...prev.meta, pagination: { ...prev.meta.pagination, page } } }));
-    loadServers({ skip });
+    const pageSize = pageSizeRef.current;
+    loadServers({ skip: (page - 1) * pageSize, limit: pageSize, search: state.searchQuery });
   };
 
   const handlePageSizeChange = (pageSize: number) => {
-    setState(prev => ({
-      ...prev,
-      meta: { ...prev.meta, pagination: { ...prev.meta.pagination, page_size: pageSize, page: 1 } },
-    }));
-    loadServers({ skip: 0, limit: pageSize });
+    pageSizeRef.current = pageSize;
+    loadServers({ skip: 0, limit: pageSize, search: state.searchQuery });
   };
 
   const selectedServers = state.servers.filter(server => 

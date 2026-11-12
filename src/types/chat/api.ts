@@ -202,6 +202,7 @@ export interface MessageContentAttributes extends Record<string, unknown> {
   deleted?: boolean;
   external_created_at?: number;
   external_error?: string;
+  sent_from_device?: boolean;
 }
 
 // ===== MESSAGE =====
@@ -227,7 +228,9 @@ export interface Message {
   external_source_ids: Record<string, unknown>;
   message_type: MessageTypeValue;
   private: boolean;
-  sender: MessageSender;
+  // An echo of a message typed on the phone reaches the CRM with no identity, so the
+  // backend stores it with no author; content_attributes.sent_from_device marks its origin.
+  sender: MessageSender | null;
   source_id: string | null;
   status: 'sent' | 'delivered' | 'read' | 'failed' | 'progress';
   attachments: Attachment[];
@@ -378,7 +381,7 @@ export interface ConversationListParams {
   labels?: string[];
   q?: string;
   sort_by?: 'last_activity_at' | 'created_at' | 'priority';
-  conversation_type?: 'mention' | 'unattended' | 'participating';
+  conversation_type?: 'unattended' | 'participating';
   unread?: boolean;
   unanswered?: boolean; // EVO-1963: open + awaiting agent reply (waiting_since present)
   is_group?: boolean;

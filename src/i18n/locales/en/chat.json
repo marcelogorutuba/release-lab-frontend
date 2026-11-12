@@ -1,4 +1,5 @@
 {
+  "templateButtonUrlParam": "Button {{button}} · link ({{n}})",
   "messages": {
     "noPermissionView": "You don't have permission to view conversations",
     "noPermissionSend": "You don't have permission to send messages",
@@ -26,6 +27,9 @@
       "bot": {
         "badge": "🤖 Bot",
         "fallback": "Bot"
+      },
+      "device": {
+        "fallback": "Sent from phone"
       },
       "privateNote": {
         "badge": "Private Note",
@@ -754,6 +758,7 @@
     "replyPreview": {
       "replyingTo": "Replying to {{name}}",
       "userFallback": "User",
+      "deviceFallback": "a message sent from the phone",
       "asPrivateNote": "(as private note)",
       "fileAttachment": "📎 {{fileType}}",
       "fileFallback": "File",

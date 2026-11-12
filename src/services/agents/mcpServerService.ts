@@ -1,5 +1,5 @@
 import evoaiApi from '@/services/core/apiEvoAI';
-import { extractData } from '@/utils/apiHelpers';
+import { extractData, extractResponse } from '@/utils/apiHelpers';
 import {
   MCPServer,
   MCPServerCreate,
@@ -13,9 +13,14 @@ export const createMCPServer = async (server: MCPServerCreate) => {
   return extractData<any>(response);
 };
 
-// List MCP servers
-export const listMCPServers = async (params?: MCPServersListParams): Promise<MCPServer[]> => {
-  const queryParams: { skip: number; limit: number; page?: number; pageSize?: number } = {
+const buildListQueryParams = (params?: MCPServersListParams) => {
+  const queryParams: {
+    skip: number;
+    limit: number;
+    page?: number;
+    pageSize?: number;
+    search?: string;
+  } = {
     skip: params?.skip || 0,
     limit: params?.limit || 100
   };
@@ -26,12 +31,34 @@ export const listMCPServers = async (params?: MCPServersListParams): Promise<MCP
   if (params?.pageSize !== undefined) {
     queryParams.pageSize = params.pageSize;
   }
+  if (params?.search) {
+    queryParams.search = params.search;
+  }
 
+  return queryParams;
+};
+
+export const listMCPServers = async (params?: MCPServersListParams): Promise<MCPServer[]> => {
   const response = await evoaiApi.get('/mcp-servers', {
-    params: queryParams,
+    params: buildListQueryParams(params),
   });
 
   return extractData<MCPServer[]>(response);
+};
+
+export interface MCPServersPage {
+  servers: MCPServer[];
+  total: number;
+}
+
+// Same request, keeping `meta.pagination.total`: the length of `data` is one page, not the base.
+export const listMCPServersPage = async (params?: MCPServersListParams): Promise<MCPServersPage> => {
+  const response = await evoaiApi.get('/mcp-servers', {
+    params: buildListQueryParams(params),
+  });
+  const { data, meta } = extractResponse<MCPServer>(response);
+  const servers = data ?? [];
+  return { servers, total: meta?.pagination?.total ?? servers.length };
 };
 
 // Get MCP server by ID

@@ -51,6 +51,8 @@
         "hint": "La chiave verrà utilizzata per identificare questo attributo nell'API. Usa solo lettere minuscole, numeri e trattini bassi.",
         "errors": {
           "required": "La chiave dell'attributo è obbligatoria",
+          "taken": "Esiste già un attributo con questa chiave",
+          "reserved": "Questa chiave è riservata a un campo standard. Usa un altro nome",
           "invalid": "La chiave deve contenere solo lettere minuscole, numeri e trattini bassi"
         }
       },
@@ -216,7 +218,13 @@
     "deleteSuccess": "Attributo personalizzato eliminato con successo",
     "deleteError": "Errore durante l'eliminazione dell'attributo personalizzato",
     "bulkDeleteSuccess": "{{count}} attributo/i personalizzato/i eliminato/i con successo",
-    "bulkDeleteError": "Errore durante l'eliminazione degli attributi personalizzati"
+    "bulkDeleteError": "Errore durante l'eliminazione degli attributi personalizzati",
+    "permissionDenied": {
+      "read": "Non hai il permesso di visualizzare gli attributi personalizzati",
+      "create": "Non hai il permesso di creare attributi personalizzati",
+      "update": "Non hai il permesso di modificare gli attributi personalizzati",
+      "delete": "Non hai il permesso di eliminare gli attributi personalizzati"
+    }
   },
   "dialog": {
     "delete": {
@@ -232,6 +240,34 @@
       "cancel": "Annulla",
       "confirm": "Elimina Tutti",
       "deleting": "Eliminazione..."
+    }
+  },
+  "modelOptions": {
+    "conversation": {
+      "label": "Conversazioni",
+      "description": "Attributi applicati alle conversazioni"
+    },
+    "contact": {
+      "label": "Contatti",
+      "description": "Attributi applicati ai contatti"
+    },
+    "pipeline": {
+      "label": "Pipeline",
+      "description": "Attributi applicati a pipeline, fasi o elementi"
+    }
+  },
+  "pipelineTypeOptions": {
+    "pipeline": {
+      "label": "Pipeline",
+      "description": "Attributi applicati alla pipeline stessa"
+    },
+    "pipeline_stage": {
+      "label": "Fase",
+      "description": "Attributi applicati alle fasi della pipeline"
+    },
+    "pipeline_item": {
+      "label": "Elemento",
+      "description": "Attributi applicati agli elementi (deal/lead) della pipeline"
     }
   }
 }

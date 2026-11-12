@@ -16,6 +16,8 @@ interface CustomMCPServersTableProps {
   onTestServer: (server: CustomMcpServer) => void;
   onCreateServer?: () => void;
   testingServerId?: string | null;
+  /** Replaces the "create your first server" empty state, e.g. when search or filters narrowed the list. */
+  emptyMessage?: string;
 }
 
 export default function CustomMCPServersTable({
@@ -29,8 +31,9 @@ export default function CustomMCPServersTable({
   onTestServer,
   onCreateServer,
   testingServerId,
+  emptyMessage,
 }: CustomMCPServersTableProps) {
-  const { t } = useLanguage('customMcpServers');
+  const { t, currentLanguage } = useLanguage('customMcpServers');
   const { can, isReady } = usePermissions();
   const serversList = servers || [];
 
@@ -114,7 +117,7 @@ export default function CustomMCPServersTable({
       sortable: true,
       render: server => (
         <span className="text-sm text-muted-foreground">
-          {new Date(server.created_at).toLocaleDateString('pt-BR')}
+          {new Date(server.created_at).toLocaleDateString(currentLanguage)}
         </span>
       ),
     },
@@ -169,12 +172,12 @@ export default function CustomMCPServersTable({
       selectedItems={selectedServers}
       onSelectionChange={onSelectionChange}
       loading={loading}
-      emptyMessage={t('table.empty.message')}
-      emptyIcon={TestTube}
-      emptyTitle={t('table.empty.title')}
-      emptyDescription={t('table.empty.description')}
+      emptyMessage={emptyMessage ?? t('table.empty.message')}
+      emptyIcon={emptyMessage ? undefined : TestTube}
+      emptyTitle={emptyMessage ? undefined : t('table.empty.title')}
+      emptyDescription={emptyMessage ? undefined : t('table.empty.description')}
       emptyAction={
-        onCreateServer && isReady && can('ai_custom_mcp_servers', 'create')
+        !emptyMessage && onCreateServer && isReady && can('ai_custom_mcp_servers', 'create')
           ? {
               label: t('table.empty.action'),
               onClick: onCreateServer,

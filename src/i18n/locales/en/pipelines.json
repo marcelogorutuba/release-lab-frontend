@@ -400,6 +400,7 @@
     "anyLabel": "Any label",
     "labelNamePlaceholder": "Label name...",
     "selectStage": "Select stage...",
+    "selectStatus": "Select status...",
     "selectAgent": "Select agent...",
     "selectPipeline": "Select pipeline...",
     "selectLabel": "Select label...",
@@ -527,7 +528,7 @@
   "pipelinesTable": {
     "loading": "Loading pipelines...",
     "columns": {
-      "name": "Nome",
+      "name": "Name",
       "type": "Type",
       "status": "Status",
       "conversations": "Conversations",
@@ -674,6 +675,7 @@
       "editStage": "Edit Stage",
       "deleteStage": "Delete Stage",
       "noConversations": "No conversation in this stage",
+      "loadMore": "Load more",
       "noStages": "No stage found for this pipeline",
       "totalValue": "{{value}}"
     },
@@ -742,6 +744,17 @@
     "tasks": {
       "pending": "pending",
       "overdue": "overdue"
+    },
+    "loadState": {
+      "forbidden": {
+        "title": "No access to this pipeline",
+        "description": "This pipeline is private or you don't have permission to view it. Ask its creator or an account administrator for access."
+      },
+      "notFound": {
+        "title": "Pipeline not found",
+        "description": "This pipeline no longer exists or the link is wrong."
+      },
+      "backToPipelines": "Back to pipelines"
     }
   },
   "tasks": {

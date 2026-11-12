@@ -34,7 +34,7 @@ export default function SegmentsTable({
   sortOrder,
   onSort,
 }: SegmentsTableProps) {
-  const { t } = useLanguage('segments');
+  const { t, currentLanguage } = useLanguage('segments');
   const { can, isReady } = usePermissions();
   const [loadingRecompute, setLoadingRecompute] = useState<string | null>(null);
   const canUpdate = () => isReady && can('segments', 'update');
@@ -69,7 +69,7 @@ export default function SegmentsTable({
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR', {
+    return new Date(dateString).toLocaleDateString(currentLanguage, {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -85,8 +85,8 @@ export default function SegmentsTable({
       sortable: true,
       render: (segment: Segment) => (
         <div>
-          <div className="font-medium text-gray-200">{segment.name}</div>
-          <div className="text-sm text-gray-500">ID: {segment.id}</div>
+          <div className="font-medium text-foreground">{segment.name}</div>
+          <div className="text-sm text-muted-foreground">ID: {segment.id}</div>
         </div>
       ),
     },
@@ -104,7 +104,7 @@ export default function SegmentsTable({
       key: 'lastComputedAt',
       label: t('table.columns.lastComputed'),
       render: (segment: Segment) => (
-        <div className="text-sm text-gray-500">
+        <div className="text-sm text-muted-foreground">
           {segment.lastComputedAt ? formatDate(segment.lastComputedAt) : t('table.never')}
         </div>
       ),
@@ -114,7 +114,7 @@ export default function SegmentsTable({
       label: t('table.columns.createdAt'),
       sortable: true,
       render: (segment: Segment) => (
-        <div className="text-sm text-gray-500">{formatDate(segment.created_at)}</div>
+        <div className="text-sm text-muted-foreground">{formatDate(segment.created_at)}</div>
       ),
     },
   ];
