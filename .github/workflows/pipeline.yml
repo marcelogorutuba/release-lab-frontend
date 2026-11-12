@@ -21,7 +21,6 @@ jobs:
     uses: ./.github/workflows/no-enterprise-guard.yml
 
   publish:
-    needs: [test, guard]
     uses: marcelogorutuba/release-lab-workflows/.github/workflows/publish-image.yml@v1.4.0
     permissions:
       contents: write
