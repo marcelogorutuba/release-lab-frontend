@@ -24,3 +24,5 @@ export const sendChatMessage = async (
 
   return extractData<any>(response);
 };
+
+export const labAny: any = 1;
