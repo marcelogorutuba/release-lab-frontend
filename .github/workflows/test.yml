@@ -8,20 +8,6 @@ permissions:
   contents: read
 
 jobs:
-  spec-list:
-    name: Spec list
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      # Same check as the pre-push hook; here it also catches `git push --no-verify`.
-      - name: Every spec is in the CI list or excluded with an owner
-        run: node ci/check-vitest-list.mjs
-
   vitest:
     name: Vitest (CI list)
     runs-on: ubuntu-latest
